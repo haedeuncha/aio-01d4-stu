@@ -23,7 +23,14 @@ uv run miniflow run flows/05-tech-support-ticket.json -i user=lee -i ticket="점
 | 2번째 | `history` 노드 출력에 1번째 문의가 남아 있는가? |
 | 3번째 | 어느 노드에서 왜 멈추었는가? `draft` 노드는 무엇이라고 답했는가? 이 경우 실제 업무에서는 어떻게 처리해야 할까? |
 
-3번째 실행에서는 FAQ 검색 결과가 없는데도 LLM이 그럴듯한 답변 초안을 만들고, 마지막 `result` 노드에서 멈춥니다. Mock으로 실행(`MINIFLOW_LLM=mock`)하면 `draft` 노드에서 바로 멈춥니다. **근거가 없을 때 실제 LLM이 어떻게 행동하는지** 실행 기록에서 확인해 보세요.
+3번째 실행에서는 FAQ 검색 결과가 없는데도 LLM이 답변 초안을 만들고, 마지막 `result` 노드에서 멈춥니다. Mock으로 실행(`MINIFLOW_LLM=mock`)하면 `draft` 노드에서 바로 멈춥니다. **근거가 없을 때 실제 LLM이 어떻게 행동하는지** 실행 기록에서 확인해 보세요.
+
+| 모델 (수업 전 측정) | `draft`가 쓴 답 | `result` |
+| --- | --- | --- |
+| `gpt-4.1-mini` | "점심 메뉴 추천에 관한 FAQ가 현재 제공되지 않아 … 양해 부탁드립니다" (솔직하게 답함) | `'0' not found`로 실패 |
+| 대체 `gemma3:4b` (`MINIFLOW_LLM=ollama`) | "… FAQ 검색 결과가 없습니다. (FAQ ID: other-123)" (**없는 FAQ 번호를 지어냄**) | `'0' not found`로 실패 |
+
+좋은 모델은 근거가 없다고 말했지만, 워크플로우는 어느 쪽이든 마지막에 가서야 멈춥니다. 모델이 바뀌어도 안전하려면 "FAQ가 없으면 담당자에게" 같은 **경로**가 필요합니다 (65일차 Condition).
 
 `uv run miniflow show flows/05-tech-support-ticket.json`으로 구조도 확인합니다.
 
@@ -82,7 +89,7 @@ uv run miniflow run flows/my-scenario.json -i user=me -i text="..."
 
 Tip
 
-- LLM 노드의 프롬프트에는 답의 형식(정해진 값, 문장 수 등)을 분명히 적습니다. Ollama 답이 매번 달라 흐름 확인이 어려우면 `mock`의 `rules`·`template`을 함께 적고 `MINIFLOW_LLM=mock`으로 구조부터 확인합니다.
+- LLM 노드의 프롬프트에는 답의 형식(정해진 값, 문장 수 등)을 분명히 적습니다. LLM 답이 매번 달라 흐름 확인이 어려우면 `mock`의 `rules`·`template`을 함께 적고 `MINIFLOW_LLM=mock`으로 구조부터 확인합니다.
 - 사용할 수 있는 Tool은 `uv run miniflow tools`로 확인합니다 (`get_weather`, `search_faq`, `count_chars`).
 - `show` 결과를 분석 문서의 "구현한 워크플로우" 항목에 붙여 넣습니다.
 

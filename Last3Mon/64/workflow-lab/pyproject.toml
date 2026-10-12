@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "A tiny JSON-defined AI workflow runner for learning LLM, Tool and Memory nodes"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = ["openai>=1.40"]  # course default LLM (key in .env)
 
 [project.optional-dependencies]
 gemini = ["google-genai>=1.0"]

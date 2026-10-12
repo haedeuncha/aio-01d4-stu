@@ -1,15 +1,20 @@
-"""LLM providers: mock (default, no API key), ollama (local), openai, anthropic, gemini.
+"""LLM providers: mock (default, no API key), openai (course default, key in .env), ollama (local), anthropic, gemini.
 
-Select with the MINIFLOW_LLM environment variable.
+Select with MINIFLOW_LLM (usually set in .env). MINIFLOW_LLM_FALLBACK=ollama retries a failed call locally.
 """
 
 import json
 import os
+import sys
+import time
 import urllib.error
 import urllib.request
 from typing import Any
 
+from miniflow import envfile
 from miniflow.template import render
+
+envfile.load()  # OPENAI_API_KEY and other settings from .env
 
 
 class LLMError(RuntimeError):
@@ -111,26 +116,68 @@ def call_gemini(system: str, prompt: str, temperature: float) -> str:
     return response.text or ""
 
 
-def call_openai(system: str, prompt: str, temperature: float) -> str:
+def call_openai(system: str, prompt: str, temperature: float, schema: dict | None = None,
+                max_tokens: int | None = None) -> str:
+    """Call the OpenAI Responses API (OPENAI_MODEL, default gpt-4.1-mini).
+
+    When `schema` is given, the answer is JSON that follows it (structured output).
+    A model that does not accept temperature is called again without it.
+    """
     try:
-        from openai import OpenAI
+        import openai
     except ImportError as error:
-        raise LLMError("Install the extra first: uv sync --extra openai") from error
+        raise LLMError("The openai package is missing. Run: uv sync") from error
     if not os.getenv("OPENAI_API_KEY"):
-        raise LLMError("OPENAI_API_KEY is not set")
-    client = OpenAI()
-    response = client.responses.create(
-        model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
-        instructions=system or None,
-        input=prompt,
-        temperature=temperature,
-    )
-    return response.output_text
+        raise LLMError("OPENAI_API_KEY is not set (put it in the .env file)")
+    client = openai.OpenAI(timeout=float(os.getenv("OPENAI_TIMEOUT", "60")),
+                           max_retries=int(os.getenv("OPENAI_MAX_RETRIES", "2")))
+    model = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+    request: dict[str, Any] = {"model": model, "input": prompt, "temperature": temperature}
+    if system:
+        request["instructions"] = system
+    if max_tokens:
+        request["max_output_tokens"] = max(16, int(max_tokens))  # the API minimum is 16
+    if schema:
+        request["text"] = {"format": {"type": "json_schema", "name": "reply", "schema": schema, "strict": False}}
+    started = time.perf_counter()
+    try:
+        try:
+            response = client.responses.create(**request)
+        except openai.BadRequestError as error:
+            if "temperature" not in str(error):
+                raise
+            request.pop("temperature")
+            response = client.responses.create(**request)
+    except openai.AuthenticationError as error:
+        raise LLMError("OpenAI rejected the API key (check OPENAI_API_KEY in .env)") from error
+    except openai.APIConnectionError as error:
+        raise LLMError(f"Cannot reach the OpenAI API ({error})") from error
+    except openai.APIStatusError as error:
+        raise LLMError(f"OpenAI API returned HTTP {error.status_code}: {error.message}") from error
+    return (response.output_text or "").strip()
 
 
 def complete(node: dict[str, Any], prompt: str, system: str, context: dict[str, Any]) -> tuple[str, str]:
-    """Return (reply, provider_name)."""
-    provider = os.getenv("MINIFLOW_LLM", "mock").lower()
+    """Return (reply, provider_name).
+
+    With MINIFLOW_LLM_FALLBACK set (for example ollama), a call that fails on the main provider
+    is tried once more there, and the reply says which provider answered.
+    """
+    primary = os.getenv("MINIFLOW_LLM", "mock").lower()
+    try:
+        return _complete_once(node, prompt, system, context, primary)
+    except LLMError as error:
+        fallback = os.getenv("MINIFLOW_LLM_FALLBACK", "").strip().lower()
+        if not fallback or fallback == primary or type(error).__name__ == "BudgetError":
+            raise
+        print(f"[miniflow] {primary} failed ({error}); trying {fallback}", file=sys.stderr)
+        try:
+            return _complete_once(node, prompt, system, context, fallback)
+        except LLMError as second:
+            raise LLMError(f"{primary} failed: {error} / fallback {fallback} failed: {second}") from second
+
+
+def _complete_once(node: dict[str, Any], prompt: str, system: str, context: dict[str, Any], provider: str) -> tuple[str, str]:
     temperature = float(node.get("temperature", 0.2))
     if provider == "mock":
         return mock_reply(prompt, node.get("mock"), context), "mock"
@@ -141,5 +188,5 @@ def complete(node: dict[str, Any], prompt: str, system: str, context: dict[str, 
     if provider == "gemini":
         return call_gemini(system, prompt, temperature), "gemini"
     if provider == "openai":
-        return call_openai(system, prompt, temperature), "openai"
+        return call_openai(system, prompt, temperature, node.get("json_schema")), "openai"
     raise LLMError(f"Unknown MINIFLOW_LLM value: {provider} (use mock, ollama, openai, anthropic or gemini)")

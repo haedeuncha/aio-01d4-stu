@@ -67,9 +67,15 @@ def cmd_check(_: argparse.Namespace) -> int:
 
     provider = os.getenv("MINIFLOW_LLM", "mock").lower()
     print(f"MINIFLOW_LLM : {provider}")
-    if provider == "ollama":
+    print(f".env         : {llm.envfile.LOADED[0] if llm.envfile.LOADED else '(none)'}")
+    if provider == "openai":
+        print(f"OPENAI_MODEL : {os.getenv('OPENAI_MODEL', 'gpt-4.1-mini')}")
+        print(f"API key      : {'set' if os.getenv('OPENAI_API_KEY') else 'MISSING (put OPENAI_API_KEY in .env)'}")
+    if provider == "ollama" or os.getenv("MINIFLOW_LLM_FALLBACK", "").lower() == "ollama":
         print(f"OLLAMA_HOST  : {os.getenv('OLLAMA_HOST', 'http://localhost:11434')}")
         print(f"OLLAMA_MODEL : {os.getenv('OLLAMA_MODEL', 'gemma3:4b')}")
+    if os.getenv("MINIFLOW_LLM_FALLBACK"):
+        print(f"FALLBACK     : {os.getenv('MINIFLOW_LLM_FALLBACK')}")
     started = time.perf_counter()
     try:
         reply, used = llm.complete({"temperature": 0}, "Reply with exactly one word: ready", "", {})

@@ -10,7 +10,7 @@
 ```text
 Last3Mon/64/
 ├── README.md
-├── SETUP-WSL-OLLAMA.md            # 사전 준비 · WSL과 Ollama 로컬 LLM
+├── SETUP-WSL-LLM.md               # 사전 준비 · WSL, OpenAI API 키(.env), 대체 Ollama
 ├── LAB-01-FIRST-WORKFLOW.md        # 1단계 · 첫 워크플로우 실행과 실행 기록 읽기
 ├── LAB-02-LLM-TOOL-MEMORY.md       # 2단계 · LLM·Tool·Memory 연결하기
 ├── LAB-03-SCENARIO-ANALYSIS.md     # 3단계 · 업무 자동화 시나리오 분석과 설계
@@ -41,11 +41,12 @@ flowchart LR
 
 ## 준비 (수업 전날)
 
-실습은 Windows 11의 WSL(Ubuntu)에서, LLM은 노트북에서 실행하는 Ollama(`gemma3:4b`, 8GB 노트북은 `gemma3:1b`)로 진행합니다. API 키는 필요 없습니다.
+실습은 Windows 11의 WSL(Ubuntu)에서 진행합니다. LLM은 OpenAI API(`gpt-4.1-mini`, 키는 `Last3Mon/.env`)를 쓰고, 키·인터넷에 문제가 있으면 노트북의 Ollama(`gemma3:4b`, 8GB 노트북은 `gemma3:1b`)가 대신 답합니다.
 
-먼저 **[실습 준비 안내](../../Lecture/64/00-DAY64-PREP.md)** 로 전체 준비 항목을 확인하고, 설치는 **[SETUP-WSL-OLLAMA.md](SETUP-WSL-OLLAMA.md)** 의 순서대로 진행한 뒤 마지막에 아래 두 명령이 통과하는지 확인합니다.
+먼저 **[실습 준비 안내](../../Lecture/64/00-DAY64-PREP.md)** 로 전체 준비 항목을 확인하고, 설치는 **[SETUP-WSL-LLM.md](SETUP-WSL-LLM.md)** 의 순서대로 진행한 뒤 마지막에 아래 명령이 통과하는지 확인합니다.
 
 ```bash
-uv run pytest -q          # 12 passed, 1 skipped
-uv run miniflow check     # Reply (ollama, ...)
+uv run pytest -q          # 18 passed, 1 skipped
+uv run miniflow check     # Reply (openai, ...)
+OPENAI_API_KEY=sk-wrong uv run miniflow check   # Reply (ollama, ...) : 대체 경로
 ```

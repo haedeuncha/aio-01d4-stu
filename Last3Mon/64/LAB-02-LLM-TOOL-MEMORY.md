@@ -13,7 +13,7 @@ uv run miniflow run flows/02-llm-tool.json -i city=제주 -i question="우산이
 
 ```text
 [2/4] weather        tool         ok    0.1ms  {"city": "제주", "condition": "비", "temp_c": 20, "rain_chance": 80, ...}
-[3/4] answer         llm          ok 3783.8ms  "네, 비가 오므로 우산이 필요할 것 같습니다."
+[3/4] answer         llm          ok 1426.2ms  "네, 제주에 비가 오고 비 올 확률이 80%이므로 우산이 필요합니다."
 ```
 
 확인할 것
@@ -71,36 +71,37 @@ uv run miniflow run flows/my-02-with-count.json -i city=서울 -i question="산�
 
 `validate`가 오류를 내면 오류 메시지를 읽고 고칩니다. 대부분 노드 id 오타나 연결 누락입니다.
 
-## 4. Mock과 실제 LLM 비교 (10분)
+## 4. Mock·OpenAI·대체 모델 비교 (10분)
 
-지금까지는 Ollama 모델이 답했습니다. 같은 워크플로우를 Mock과 번갈아 실행해 비교합니다.
+지금까지는 OpenAI `gpt-4.1-mini`가 답했습니다. 같은 워크플로우를 Mock, 대체 모델(Ollama)과 번갈아 실행해 비교합니다.
 
 ```bash
 uv run miniflow run flows/05-tech-support-ticket.json -i user=kim -i ticket="프린터에서 출력이 안 됩니다"
 uv run miniflow run flows/05-tech-support-ticket.json -i user=kim -i ticket="프린터에서 출력이 안 됩니다"
 MINIFLOW_LLM=mock uv run miniflow run flows/05-tech-support-ticket.json -i user=kim -i ticket="프린터에서 출력이 안 됩니다"
+MINIFLOW_LLM=ollama uv run miniflow run flows/05-tech-support-ticket.json -i user=kim -i ticket="프린터에서 출력이 안 됩니다"
 ```
 
-| 비교할 것 | Mock | Ollama |
-| --- | --- | --- |
-| `classify`·`draft` 노드의 `ms` |  |  |
-| 두 번 실행한 답변이 같은가? |  |  |
-| 분류 결과가 정해진 값(`device`)과 정확히 같은가? |  |  |
+| 비교할 것 | Mock | OpenAI | Ollama |
+| --- | --- | --- | --- |
+| `classify`·`draft` 노드의 `ms` |  |  |  |
+| 두 번 실행한 답변이 같은가? |  |  |  |
+| 분류 결과가 정해진 값(`device`)과 정확히 같은가? |  |  |  |
 
-수업 전에 확인한 결과(CPU 1개, 메모리 8GB 환경)는 다음과 같았습니다. 내 노트북 결과와 비교해 보세요.
+수업 전에 같은 문의 4건(비밀번호, VPN, 프린터, 메일 프로그램 설치)으로 확인한 결과입니다. 내 노트북 결과와 비교해 보세요. Ollama 시간은 노트북 성능에 따라 크게 다릅니다.
 
 | 모델 | 분류 4건 정답 | 분류 노드 | 답변 초안 노드 |
 | --- | --- | --- | --- |
-| `gemma3:1b` | 0/4 (전부 `software`, 한 번은 `Software`) | 약 1초 | 4~7초 |
-| `gemma3:4b` | 4/4 | 약 1.7초 | 7~11초 |
+| `gpt-4.1-mini` (OpenAI, 기본) | 4/4 | 약 1~2.6초 | 약 1.2~1.7초 |
+| `gemma3:4b` (대체) | 4/4 | 약 1.6~2.3초 | 7~11초 |
+| `gemma3:1b` (8GB 노트북 대체) | 1/4 (나머지 `software`, 대문자 `Software`가 나온 적도 있음) | 약 1초 | 4~7초 |
 
-작은 모델은 빠르지만 판단이 틀리거나 대소문자처럼 형식이 흔들립니다. 다음 노드가 분류값을 비교해야 한다면, LLM 출력을 그대로 믿지 말고 **검증하는 단계**가 필요합니다. (73일차 입력·출력 검증)
+작은 모델은 빠르지만 판단이 틀리거나 대소문자처럼 형식이 흔들립니다. 8GB 노트북은 `OLLAMA_MODEL=gemma3:1b MINIFLOW_LLM=ollama`로, 메모리가 넉넉하면 두 모델을 모두 돌려 봅니다. 다음 노드가 분류값을 비교해야 한다면, LLM 출력을 그대로 믿지 말고 **검증하는 단계**가 필요합니다. (73일차 입력·출력 검증)
 
-(선택) OpenAI/Anthropic/Gemini 중 API 키가 있으면 클라우드 모델과도 비교할 수 있습니다. 가지고 있는 키 하나만 설정하면 됩니다.
+(선택) Anthropic·Gemini 키가 있으면 다른 제공사 모델과도 비교할 수 있습니다. 가지고 있는 키 하나만 설정하면 됩니다.
 
 | 제공사 | 설치 | 설정 |
 | --- | --- | --- |
-| OpenAI | `uv sync --extra openai` | `export MINIFLOW_LLM=openai`, `export OPENAI_API_KEY=...` |
 | Anthropic | `uv sync --extra anthropic` | `export MINIFLOW_LLM=anthropic`, `export ANTHROPIC_API_KEY=...` |
 | Gemini (10일차에 발급한 키) | `uv sync --extra gemini` | `export MINIFLOW_LLM=gemini`, `export GEMINI_API_KEY=...` |
 
@@ -117,4 +118,4 @@ MINIFLOW_LLM=mock uv run miniflow run flows/05-tech-support-ticket.json -i user=
 - [ ] Tool 결과가 LLM 프롬프트에 들어간 것을 실행 기록에서 찾았다.
 - [ ] Memory가 두 번의 실행을 이어 주는 것을 확인했다.
 - [ ] `my-02-with-count.json`을 만들어 `validate`와 `run`을 통과했다.
-- [ ] Mock과 Ollama의 결과·속도 차이를 표로 정리했다.
+- [ ] Mock·OpenAI·Ollama의 결과·속도 차이를 표로 정리했다.

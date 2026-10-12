@@ -6,12 +6,12 @@
 
 ## 1. 설치 확인 (5분)
 
-[사전 준비 안내](SETUP-WSL-OLLAMA.md)를 마친 상태에서 WSL 터미널에서 실행합니다.
+[사전 준비 안내](SETUP-WSL-LLM.md)를 마친 상태에서 WSL 터미널에서 실행합니다.
 
 ```bash
 cd ~/<수업 저장소>/Last3Mon/64/workflow-lab
-uv run pytest -q          # 12 passed, 1 skipped
-uv run miniflow check     # Reply (ollama, ...) 가 나오면 준비 완료
+uv run pytest -q          # 18 passed, 1 skipped
+uv run miniflow check     # Reply (openai, ...) 가 나오면 준비 완료
 ```
 
 ## 2. 가장 단순한 워크플로우 실행 (10분)
@@ -33,14 +33,22 @@ uv run miniflow run flows/01-llm-only.json -i text="다음 주 화요일 10시�
 Workflow: 01 LLM only
 ------------------------------------------------------------------------
 [1/3] start          input        ok    0.0ms  {"text": "다음 주 화요일 ..."}
-[2/3] summarize      llm          ok 7071.5ms  "다음 주 화요일 10시에 기획 회의가 진행됩니다. 각 팀은 ..."
-[3/3] result         output       ok    0.1ms  "다음 주 화요일 10시에 기획 회의가 진행됩니다. 각 팀은 ..."
+[2/3] summarize      llm          ok 1645.8ms  "다음 주 화요일 10시에 기획 회의가 있습니다. 각 팀은 진행 현황을 준비해 주세요."
+[3/3] result         output       ok    0.0ms  "다음 주 화요일 10시에 기획 회의가 있습니다. 각 팀은 진행 현황을 준비해 주세요."
 ------------------------------------------------------------------------
 Status: completed
 Trace saved: runs/20261014-101500-01-llm-only.json
 ```
 
-노트북의 Ollama 모델(`gemma3:4b`)이 요약을 만들었습니다. 요약 문장과 소요 시간은 실행할 때마다, 노트북마다 다릅니다.
+OpenAI의 `gpt-4.1-mini`가 요약을 만들었습니다(약 1.4~1.6초). 요약 문장과 소요 시간은 실행할 때마다 조금씩 다를 수 있습니다.
+
+같은 명령을 **대체 모델(Ollama)** 로도 실행해 봅니다. `.env`보다 명령 앞에 적은 값이 우선합니다.
+
+```bash
+MINIFLOW_LLM=ollama uv run miniflow run flows/01-llm-only.json -i text="다음 주 화요일 10시에 기획 회의를 진행합니다. 각 팀은 진행 현황을 준비해 주세요."
+```
+
+수업 전 측정에서 `gemma3:4b`는 12.7초가 걸렸고, 원문에 없는 "회의에서 진행 상황을 공유하고 논의할 예정입니다"를 덧붙였습니다. 요약 노드도 **내용을 지어낼 수 있습니다**.
 
 같은 명령을 **Mock LLM**으로도 실행해 비교해 봅니다. Mock은 노드에 적어 둔 정해진 답을 돌려줍니다.
 
@@ -54,7 +62,7 @@ MINIFLOW_LLM=mock uv run miniflow run flows/01-llm-only.json -i text="다음 주
 
 1. `summarize` 노드의 `prompt` 필드에는 무엇이 들어 있나요? `{{input.text}}`는 어떻게 바뀌었나요?
 2. `provider` 값은 무엇인가요? Mock으로 실행한 기록과 비교하면 무엇이 다른가요?
-3. 각 노드의 `ms` 값을 보면 어느 노드가 가장 오래 걸렸나요? Mock으로 실행했을 때와 비교하면 얼마나 차이 나나요?
+3. 각 노드의 `ms` 값을 보면 어느 노드가 가장 오래 걸렸나요? Mock, Ollama로 실행했을 때와 비교하면 얼마나 차이 나나요?
 
 ```bash
 uv run miniflow show flows/01-llm-only.json

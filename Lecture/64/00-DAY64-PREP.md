@@ -6,7 +6,7 @@
 
 ```mermaid
 flowchart LR
-  A["1. 실습 환경<br/>WSL · uv · Ollama"] --> B["2. 확인 명령<br/>pytest · check"]
+  A["1. 실습 환경<br/>WSL · uv · API 키 · Ollama"] --> B["2. 확인 명령<br/>pytest · check"]
   B --> C["3. 미리 읽기<br/>JSON · 지난 실습"]
   C --> D["4. 생각해 오기<br/>내 업무 시나리오"]
 ```
@@ -15,19 +15,20 @@ flowchart LR
 
 ## 1. 실습 환경 준비 (전날 필수, 약 40분)
 
-오늘 실습은 Windows 11 노트북의 **WSL(Ubuntu)** 에서, LLM은 노트북에서 직접 실행하는 **Ollama**로 진행합니다. API 키는 필요 없습니다.
+오늘 실습은 Windows 11 노트북의 **WSL(Ubuntu)** 에서 진행합니다. LLM은 과정에서 받은 키로 **OpenAI API**(`gpt-4.1-mini`)를 쓰고, 키·인터넷에 문제가 있으면 노트북에서 직접 실행하는 **Ollama**(`gemma3:4b`)가 대신 답합니다. 이 구성은 65일차 이후에도 그대로 씁니다.
 
-자세한 순서는 **[사전 준비 안내 (SETUP-WSL-OLLAMA)](../../Last3Mon/64/SETUP-WSL-OLLAMA.md)** 를 따라 하세요. 할 일만 요약하면 다음과 같습니다.
+자세한 순서는 **[사전 준비 안내 (SETUP-WSL-LLM)](../../Last3Mon/64/SETUP-WSL-LLM.md)** 를 따라 하세요. 할 일만 요약하면 다음과 같습니다.
 
 | 순서 | 할 일 | 시간 |
 | --- | --- | --- |
 | 1 | WSL(Ubuntu) 동작 확인 | 5분 |
-| 2 | 노트북 메모리 확인 → 사용할 모델 결정 (8GB: `gemma3:1b`, 16GB 이상: `gemma3:4b`) | 2분 |
-| 3 | uv 설치, 수업 저장소 받기 (WSL 홈 `~` 아래) | 10분 |
-| 4 | Ollama 설치와 모델 다운로드 | 10~20분 |
-| 5 | `~/.bashrc`에 `MINIFLOW_LLM`, `OLLAMA_MODEL` 설정 | 3분 |
+| 2 | uv 설치, 수업 자료 받기 (WSL 홈 `~` 아래) | 10분 |
+| 3 | `Last3Mon/.env`에 OpenAI API 키 넣기 | 3분 |
+| 4 | 노트북 메모리 확인 → 대체 모델 결정 (8GB: `gemma3:1b`, 16GB 이상: `gemma3:4b`) | 2분 |
+| 5 | Ollama 설치와 모델 다운로드 (대체용) | 10~20분 |
+| 6 | 연결 확인 (OpenAI, 대체 Ollama) | 5분 |
 
-> 모델 파일이 1~3GB라서 수업 중에 여러 명이 동시에 받으면 강의실 네트워크가 매우 느려집니다. **다운로드는 꼭 집에서 미리** 해 주세요.
+> Ollama 모델 파일이 1~3GB라서 수업 중에 여러 명이 동시에 받으면 강의실 네트워크가 매우 느려집니다. **다운로드는 꼭 집에서 미리** 해 주세요.
 
 ## 2. 준비가 끝났는지 확인 (전날 필수, 5분)
 
@@ -35,17 +36,19 @@ WSL 터미널에서 실습 폴더로 이동해 아래 두 명령을 실행합니
 
 ```bash
 cd ~/<수업 저장소>/Last3Mon/64/workflow-lab
-uv run pytest -q          # 12 passed, 1 skipped 가 나오면 성공
-uv run miniflow check     # Reply (ollama, ...) 가 나오면 성공
+uv run pytest -q          # 18 passed, 1 skipped 가 나오면 성공
+uv run miniflow check     # Reply (openai, ...) 가 나오면 성공
+OPENAI_API_KEY=sk-wrong uv run miniflow check   # Reply (ollama, ...) 가 나오면 대체도 준비 완료
 ```
 
 | 결과 | 의미 |
 | --- | --- |
-| 두 명령 모두 성공 | 준비 완료 |
-| `pytest`는 성공, `check`가 실패 | Ollama 설정 문제. 안내서 7절(문제 해결) 확인 |
+| 세 명령 모두 성공 | 준비 완료 |
+| `pytest`는 성공, 첫 `check`가 실패 | `.env`의 키 문제. 안내서 8절(문제 해결) 확인 |
+| 첫 `check`는 성공, 두 번째가 실패 | 대체용 Ollama 문제. 수업은 OpenAI로 할 수 있으니 1교시 전에 말씀해 주세요 |
 | 둘 다 실패 | uv 또는 저장소 위치 문제. 안내서 3절부터 다시 확인 |
 
-해결이 안 되면 수업 당일 1교시 전에 말씀해 주세요. 그동안은 `export MINIFLOW_LLM=mock`으로 Mock LLM을 써서 실습을 따라올 수 있습니다.
+해결이 안 되면 수업 당일 1교시 전에 말씀해 주세요. 키를 아직 못 받았으면 `.env`의 `MINIFLOW_LLM=ollama`로, 둘 다 안 되면 `export MINIFLOW_LLM=mock`으로 Mock LLM을 써서 실습을 따라올 수 있습니다.
 
 ---
 
@@ -118,14 +121,16 @@ uv run miniflow check     # Reply (ollama, ...) 가 나오면 성공
 
 ## 5. 당일 준비물
 
-- 충전된 노트북과 충전기 (Ollama는 배터리를 많이 사용합니다)
+- 충전된 노트북과 충전기 (대체용 Ollama는 배터리를 많이 사용합니다)
 - Windows Terminal (WSL 터미널), VS Code
 - 웹 브라우저 (워크플로우 그림 확인용 [Mermaid Live Editor](https://mermaid.live))
-- (선택) OpenAI/Anthropic/Gemini 중 가지고 있는 API 키 하나 (예: 10일차에 발급한 Gemini 키) — 로컬 모델과 클라우드 모델을 비교해 볼 수 있습니다
+- 과정에서 받은 OpenAI API 키 (`Last3Mon/.env`에 넣어 오기). 키는 채팅·문서·화면 캡처에 올리지 않습니다
+- (선택) Anthropic·Gemini 키가 있으면 (예: 10일차에 발급한 Gemini 키) 같은 워크플로우를 다른 제공사 모델로도 비교해 볼 수 있습니다
 
 ## 확인
 
-- [ ] `uv run pytest -q` → `12 passed, 1 skipped`
-- [ ] `uv run miniflow check` → `Reply (ollama, ...)`
+- [ ] `uv run pytest -q` → `18 passed, 1 skipped`
+- [ ] `uv run miniflow check` → `Reply (openai, ...)`
+- [ ] `OPENAI_API_KEY=sk-wrong uv run miniflow check` → `Reply (ollama, ...)`
 - [ ] JSON 기초(3.1)를 읽었다
 - [ ] Lab 03에서 분석할 업무 후보를 하나 생각했다

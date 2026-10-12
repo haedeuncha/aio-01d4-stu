@@ -5,7 +5,7 @@
 ```mermaid
 flowchart LR
   J["flows/*.json<br/>노드와 연결 정의"] --> E["miniflow 엔진<br/>순서 계산 · 실행"]
-  E --> L{{"LLM 노드<br/>ollama · mock · openai · anthropic · gemini"}}
+  E --> L{{"LLM 노드<br/>openai · ollama · mock · anthropic · gemini"}}
   E --> T["Tool 노드<br/>get_weather · search_faq"]
   E --> M[("Memory 노드<br/>.miniflow-memory.json")]
   E --> R["runs/*.json<br/>실행 기록(Trace)"]
@@ -57,19 +57,18 @@ uv run pytest -q
 
 ## 5. LLM 선택
 
-`MINIFLOW_LLM` 환경 변수로 LLM을 고릅니다. 수업 기본값은 노트북에서 실행하는 **Ollama**입니다. 준비 방법은 [SETUP-WSL-OLLAMA.md](../SETUP-WSL-OLLAMA.md)를 참고하세요.
+`MINIFLOW_LLM`으로 LLM을 고릅니다. 보통은 `Last3Mon/.env`에 적어 두고(실행한 폴더에서 위로 올라가며 가장 가까운 `.env`를 읽음), 셸이나 명령 앞에 적은 값이 `.env`보다 우선합니다. 수업 기본값은 **OpenAI API**이고, `MINIFLOW_LLM_FALLBACK=ollama`이면 OpenAI 호출이 실패할 때 노트북의 Ollama로 한 번 더 시도합니다. 준비 방법은 [SETUP-WSL-LLM.md](../SETUP-WSL-LLM.md)를 참고하세요.
 
 | `MINIFLOW_LLM` | LLM | 필요한 것 |
 | --- | --- | --- |
-| `ollama` (수업 기본) | 로컬 모델 (`OLLAMA_MODEL`, 기본 `gemma3:4b`) | Ollama 설치, 모델 다운로드 |
-| `mock` (설정하지 않았을 때) | 노드의 `mock` 설정대로 정해진 답 | 없음 (자동 테스트, Ollama가 안 될 때) |
-| `openai` | OpenAI (`OPENAI_MODEL`) | `uv sync --extra openai`, `OPENAI_API_KEY` |
+| `openai` (수업 기본) | OpenAI (`OPENAI_MODEL`, 기본 `gpt-4.1-mini`) | `.env`의 `OPENAI_API_KEY` (패키지는 `uv sync`에 포함) |
+| `ollama` (대체) | 로컬 모델 (`OLLAMA_MODEL`, 기본 `gemma3:4b`) | Ollama 설치, 모델 다운로드 |
+| `mock` (`.env`도 설정도 없을 때) | 노드의 `mock` 설정대로 정해진 답 | 없음 (자동 테스트, 둘 다 안 될 때) |
 | `anthropic` | Anthropic Claude (`ANTHROPIC_MODEL`, 기본 `claude-opus-5-5`) | `uv sync --extra anthropic`, `ANTHROPIC_API_KEY` |
 | `gemini` | Google Gemini (`GEMINI_MODEL`) | `uv sync --extra gemini`, `GEMINI_API_KEY` |
 
 ```bash
-export MINIFLOW_LLM=ollama
-export OLLAMA_MODEL=gemma3:4b               # 8GB 노트북은 gemma3:1b
-export OLLAMA_HOST=http://localhost:11434   # 기본값이라 생략 가능
-uv run miniflow check                       # 연결 확인
+uv run miniflow check                                   # .env 설정으로 연결 확인 → Reply (openai, ...)
+OPENAI_API_KEY=sk-wrong uv run miniflow check           # 대체 경로 확인 → Reply (ollama, ...)
+MINIFLOW_LLM=ollama OLLAMA_MODEL=gemma3:1b uv run miniflow check   # 대체 모델만 따로
 ```
