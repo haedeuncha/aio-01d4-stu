@@ -163,7 +163,7 @@ OPENAI_API_KEY=sk-wrong uv run miniflow check   # Reply (ollama, ...) 가 나오
 
 - 충전된 노트북과 충전기 (대체용 Ollama는 배터리를 많이 사용합니다)
 - Windows Terminal (WSL 터미널), VS Code
-- 웹 브라우저 (워크플로우 그림 확인용 [Mermaid Live Editor](https://mermaid.live))
+- 웹 브라우저 (워크플로우 그림 확인용 [Mermaid Viewer](https://mermaidviewer.com/ko))
 - 과정에서 받은 OpenAI API 키 (`Last3Mon/.env`에 넣어 오기). 키는 채팅·문서·화면 캡처에 올리지 않습니다
 - (선택) Anthropic·Gemini 키가 있으면 (예: 10일차에 발급한 Gemini 키) 같은 워크플로우를 다른 제공사 모델로도 비교해 볼 수 있습니다
 
