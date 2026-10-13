@@ -2,6 +2,7 @@
 # Register the course credentials in n8n from the .env file, so the API key is never typed into
 # a workflow or committed to git.
 #   cd Last3Mon/65/n8n && docker compose up -d && bash register-credentials.sh
+#   N8N_CONTAINER=<name> if your n8n container has another name (docker ps).
 #
 # Creates (or updates) two credentials with fixed ids that the course workflows already use:
 #   OpenAI (.env)  id openAiCourse0001  <- OPENAI_API_KEY (and OPENAI_BASE_URL if set)
@@ -39,7 +40,9 @@ fi
 credentials=$(printf '[{"id":"openAiCourse0001","name":"OpenAI (.env)","type":"openAiApi","data":{"apiKey":"%s","url":"%s"}},{"id":"ollamaLocal0001","name":"Ollama local","type":"ollamaApi","data":{"baseUrl":"http://ollama:11434"}}]' "$key" "$base_url")
 
 # The JSON goes through stdin into a temporary file inside the container, then is deleted.
-printf '%s' "$credentials" | docker compose exec -T n8n sh -c \
+container="${N8N_CONTAINER:-day65-n8n-n8n-1}"
+docker inspect "$container" >/dev/null 2>&1 || { echo "n8n container '$container' not found. Start n8n first: cd Last3Mon/65/n8n && docker compose up -d" >&2; exit 1; }
+printf '%s' "$credentials" | docker exec -i "$container" sh -c \
   'cat > /tmp/course-credentials.json && n8n import:credentials --input=/tmp/course-credentials.json; status=$?; rm -f /tmp/course-credentials.json; exit $status'
 
 echo "Registered 'OpenAI (.env)' and 'Ollama local' from $env_file"

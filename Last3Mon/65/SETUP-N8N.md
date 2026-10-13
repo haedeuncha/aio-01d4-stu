@@ -1,8 +1,8 @@
 # 사전 준비 · n8n 실행과 OpenAI API 키 연결
 
-65일차부터 노코드 워크플로우 도구 **n8n**을 사용합니다. 수업의 LLM은 **OpenAI API**(기본 모델 `gpt-4.1-mini`)입니다. API 키는 git에 올라가지 않는 `.env` 파일 한 곳에만 두고, n8n과 WSL의 `miniflow`가 모두 그 파일에서 키를 읽습니다. 64일차의 Ollama는 **대체용**으로 같은 Compose에서 함께 실행합니다 (OpenAI가 실패하거나 키가 없을 때).
+65일차부터 노코드 워크플로우 도구 **n8n**을 사용합니다. 수업의 LLM은 **OpenAI API**(기본 모델 `gpt-4.1-mini`)입니다. API 키는 git에 올라가지 않는 `.env` 파일 한 곳에만 두고, n8n과 WSL의 `miniflow`가 모두 그 파일에서 키를 읽습니다. n8n은 **n8n 공식 한 줄 설치**(`curl -fsSL https://get.n8n.io | sh`, [공식 안내](https://docs.n8n.io/deploy/host-n8n/install-options/one-line-setup))로 WSL의 Docker에 설치하고, 64일차의 Ollama는 **대체용**으로 수업 Compose가 함께 실행합니다 (OpenAI가 실패하거나 키가 없을 때).
 
-> 이미지 다운로드가 약 5GB입니다(n8n 1.1GB, Ollama 4.2GB). **수업 전날 집에서 5단계까지 끝내 주세요.** 9월에 Docker로 Ollama를 써 봤다면 Ollama 이미지는 이미 있을 수 있습니다.
+> 이미지 다운로드가 약 6.5GB입니다 (공식 설치의 n8n 묶음 약 2.3GB: n8n 1.1GB · 코드 실행기 0.55GB · 샌드박스 0.43GB · 검색 0.26GB / Ollama 4.2GB). **수업 전날 집에서 6단계까지 끝내 주세요.** 9월에 Docker로 Ollama를 써 봤다면 Ollama 이미지는 이미 있을 수 있습니다.
 
 ```mermaid
 flowchart LR
@@ -10,8 +10,15 @@ flowchart LR
   E[".env<br/>OPENAI_API_KEY<br/>(git 제외)"] -.-> M & C
   subgraph WSL["WSL2 (Ubuntu)"]
     M["miniflow<br/>(uv 프로젝트)"]
-    subgraph DC["Docker Compose · day65-n8n"]
-      N["n8n :5678"] -. "대체" .-> O["Ollama :11434"]
+    subgraph DC["Docker Compose 프로젝트 day65-n8n"]
+      subgraph OFF["~/day65-n8n (공식 한 줄 설치)"]
+        N["n8n :5678"]
+        RN["runners<br/>Code 노드 실행"]
+        SB["sandbox · searxng<br/>(n8n AI 기능용)"]
+      end
+      O["Ollama :11434<br/>(Last3Mon/65/n8n이 더함)"]
+      N -. "대체" .-> O
+      N --- RN
     end
     C["register-credentials.sh"] -->|"Credential 등록"| N
     M -->|"http://localhost:5678/webhook/..."| N
@@ -100,15 +107,45 @@ ls /usr/share/ollama/.ollama/models 2>/dev/null && echo "서비스 설치 경로
 | `서비스 설치 경로 사용` | `OLLAMA_DATA=/usr/share/ollama/.ollama` (기본값 그대로) |
 | `홈 경로 확인 필요` | `OLLAMA_DATA=/home/<WSL 사용자 이름>/.ollama` 로 바꾸기 |
 
-## 5. n8n 실행과 첫 설정 (이미지 다운로드 10~30분)
+## 5. n8n 공식 한 줄 설치 (이미지 다운로드 5~15분)
+
+n8n이 제공하는 설치 스크립트가 Docker Compose 설정을 **자동으로** 만들고 n8n을 켭니다. 수업에서는 두 가지만 정해서 실행합니다.
+
+```bash
+cd ~
+curl -fsSL https://get.n8n.io | N8N_DIR=./day65-n8n sh -s -- --version 2.42.6
+```
+
+| 옵션 | 이유 |
+| --- | --- |
+| `N8N_DIR=./day65-n8n` | 설치 폴더 `~/day65-n8n`. 폴더 이름이 Docker 프로젝트 이름이 되어, 67일차부터 쓰는 사내 데이터 API가 같은 네트워크(`day65-n8n_default`)에 붙습니다 |
+| `--version 2.42.6` | 수업 자료를 이 버전으로 만들고 측정했습니다. 빼면 그날의 최신 버전이 설치됩니다 |
+
+```text
+✔ Started n8n 2.42.6 and sandbox services
+n8n is running at: http://localhost:5678
+Config files:      ./day65-n8n/compose.yml, ./day65-n8n/.env
+```
+
+스크립트가 만든 파일은 이렇습니다. **고치지 않고 그대로 둡니다.**
+
+| 파일 | 내용 |
+| --- | --- |
+| `~/day65-n8n/compose.yml` | n8n, `runners`(Code 노드의 코드를 따로 실행), `sandbox-*`·`searxng`(n8n 화면 안 AI 도우미용) |
+| `~/day65-n8n/.env` | n8n 버전과 내부 비밀값 (git 밖, 공유하지 않음) |
+| Docker 볼륨 `day65-n8n_n8n-data` | 워크플로우·계정·Credential·실행 기록 |
+
+### 5.1 수업 Compose로 Ollama까지 함께 켜기
+
+`Last3Mon/65/n8n/compose.yml`은 위 공식 `compose.yml`을 **포함(include)** 하고 Ollama만 더합니다. 그래서 오늘부터는 이 폴더에서 Compose 명령 하나로 n8n과 Ollama를 함께 다룹니다.
 
 ```bash
 cd ~/aio-01d4-stu/Last3Mon/65/n8n
-docker compose up -d
+docker compose up -d              # Ollama를 더하고, n8n 쪽은 이미 켜져 있으면 그대로
 docker compose ps
 ```
 
-- `docker compose ps`에서 `n8n`과 `ollama`가 모두 `running`이면 성공입니다.
+- `docker compose ps`에서 `n8n`, `runners`, `ollama`(그리고 `sandbox-api`, `sandbox-runner-1`, `searxng`)가 `running`이면 성공입니다.
 - Windows 브라우저에서 **http://localhost:5678** 을 열고, 처음 한 번 관리자 계정(이메일·이름·비밀번호)을 만듭니다. 이 계정은 내 노트북 안에만 저장되며, 외부로 가입되는 것이 아닙니다.
 - 설문 화면이 나오면 건너뛰어도 됩니다.
 
@@ -146,11 +183,16 @@ Reply (openai, 2.9s): ready
 
 ## 8. 끄고 켜기
 
+`Last3Mon/65/n8n` 폴더에서 합니다. 공식 설치 폴더(`~/day65-n8n`)에서 따로 켜고 끌 필요는 없습니다.
+
 ```bash
+cd ~/aio-01d4-stu/Last3Mon/65/n8n
 docker compose stop      # 수업이 끝나면 멈춤 (데이터는 유지)
 docker compose start     # 다음에 다시 켬
 docker compose down      # 컨테이너 삭제 (워크플로우·계정·Credential은 n8n-data 볼륨에 유지)
 ```
+
+`docker compose down -v`는 볼륨까지 지우므로 쓰지 않습니다. n8n 버전을 올리는 공식 명령(`... | sh -s -- --upgrade`)도 수업 중에는 쓰지 않습니다 (자료가 2.42.6 기준).
 
 ## 9. 문제 해결
 
@@ -161,13 +203,17 @@ docker compose down      # 컨테이너 삭제 (워크플로우·계정·Credent
 | `HTTP 429 insufficient_quota` | 키의 조직에 API 크레딧이 없음 → 강사·운영진에 알림 |
 | `register-credentials.sh`가 `No .env with OPENAI_API_KEY found` | 2단계를 `Last3Mon` 폴더에서 했는지 확인 |
 | `port is already allocated` (11434) | 3단계: `sudo systemctl stop ollama` |
-| `port is already allocated` (5678) | 다른 n8n이 실행 중인지 `docker ps`로 확인 후 멈춤 |
+| `port is already allocated` (5678) / 설치 스크립트가 `something is already listening on port 5678` | 다른 n8n이 실행 중인지 `docker ps`로 확인 후 멈춤 |
+| 설치 스크립트가 `Docker is not installed` / `daemon is not running` | 1단계(WSL Docker 설치), `docker` 그룹 적용을 위해 터미널 다시 열기, `sudo systemctl start docker` |
+| 설치 스크립트가 `./day65-n8n exists and is not empty` | 이미 설치됨. 5.1절로 넘어가기 (`~/day65-n8n`을 지우지 않습니다) |
+| `docker compose up`이 `.../day65-n8n/compose.yml: no such file or directory` | 5단계를 홈(`cd ~`)에서 하지 않았거나 수업 저장소가 `~/aio-01d4-stu`가 아님 → n8n을 설치한 폴더를 `.env`의 `N8N_HOME=`에 적기 |
+| `Docker Hub pull rate limit` | 잠시 후 다시, 또는 `docker login` |
 | 브라우저에서 `localhost:5678`이 열리지 않음 | `docker compose ps`로 상태 확인, `docker compose logs n8n`으로 오류 확인. WSL 안의 컨테이너도 Windows 브라우저에서 `localhost`로 열리는 것이 기본이며, 계속 안 되면 PowerShell에서 `wsl --shutdown` 후 WSL을 다시 열기 |
 | 웹훅 호출이 404 (`not registered`) | 워크플로우 오른쪽 위 **Publish** 토글 확인. 같은 워크플로우를 여러 번 가져왔다면 기존 것을 삭제하고 한 번만 가져온 뒤 Publish |
 
 ## 확인
 
 - [ ] `Last3Mon/.env`에 키를 넣었고, `git status`에 `.env`가 보이지 않는다
-- [ ] `docker compose ps` → n8n, ollama 모두 running
+- [ ] `~/day65-n8n`에 공식 설치가 있고(`compose.yml`, `.env`), `Last3Mon/65/n8n`에서 `docker compose ps` → n8n, runners, ollama 모두 running
 - [ ] n8n Credentials에 `OpenAI (.env)`, `Ollama local`이 있다
 - [ ] `uv run miniflow check` → `Reply (openai, …): ready`
