@@ -12,6 +12,7 @@ Last3Mon/65/
 ├── README.md
 ├── SETUP-N8N.md                    # 사전 준비 · API 키(.env), n8n 실행, Credential 등록
 ├── LAB-01-CONDITION-IN-MINIFLOW.md # 1단계 · Condition·Switch로 분기 만들기
+├── LAB-02A-FIRST-WORKFLOW-IN-BROWSER.md # 2단계 · (기본) Windows 브라우저로 WSL의 n8n 열고 직접 만들기
 ├── LAB-02-N8N-FIRST-WORKFLOWS.md   # 2단계 · n8n 화면 익히기, IF·Webhook·Switch
 ├── LAB-03-AI-WORKFLOW-FAILOVER.md  # 3단계 · AI 문의 처리 워크플로우와 플랫폼 전환
 ├── templates/
@@ -29,11 +30,12 @@ Last3Mon/65/
 
 ```mermaid
 flowchart LR
-  L1["Lab 01<br/>miniflow Condition·Switch<br/>(1~2교시)"] --> L2["Lab 02<br/>n8n 화면·IF·Webhook·Switch<br/>(3~4교시)"] --> L3["Lab 03<br/>AI 문의 처리·플랫폼 전환<br/>(5~6교시)"]
+  L1["Lab 01<br/>miniflow Condition·Switch<br/>(1~2교시)"] --> L2A["Lab 02A<br/>브라우저에서 직접 만들기<br/>(3교시 끝~4교시 초)"] --> L2["Lab 02<br/>n8n 화면·IF·Webhook·Switch<br/>(3~4교시)"] --> L3["Lab 03<br/>AI 문의 처리·플랫폼 전환<br/>(5~6교시)"]
 ```
 
 | n8n 워크플로우 | Trigger | Condition | Action |
 | --- | --- | --- | --- |
+| (Lab 02A, 직접 만듦) `65-00 My first workflow` | Manual + Webhook `POST /my-first-route` | If (`긴급` 포함) | 처리 경로 지정, 응답 |
 | `01-condition-basics.json` | Manual | IF (긴급 여부) | 처리 경로·처리 기한 지정 |
 | `02-webhook-router.json` | Webhook `POST /request-route` | IF (내용 있음) → Switch (분류) | 담당 팀 지정, 응답 |
 | `03-ai-request-flow.json` | Webhook `POST /ai-request` | IF (내용 있음) → IF (FAQ 있음) | LLM 분류·답변 작성, 담당자 전달, 응답 |

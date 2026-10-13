@@ -2,7 +2,7 @@
 
 - 관련 강의: [2단계 · n8n 실습 환경과 기본 설정](../../Lecture/65/02-STAGE2-N8N-ENVIRONMENT.md)
 - 소요 시간: 약 45분
-- 준비: [SETUP-N8N.md](SETUP-N8N.md) 완료, 브라우저에서 http://localhost:5678 로그인
+- 준비: [SETUP-N8N.md](SETUP-N8N.md) 완료, **[Lab 02A](./LAB-02A-FIRST-WORKFLOW-IN-BROWSER.md)(브라우저에서 직접 만들기) 완료**, 브라우저에서 http://localhost:5678 로그인
 
 ## 1. 워크플로우 가져오기 (5분)
 
