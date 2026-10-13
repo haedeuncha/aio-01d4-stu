@@ -1,0 +1,35 @@
+# n8n (LLM: OpenAI API, key from Last3Mon/.env via register-credentials.sh) + Ollama as the fallback.
+#   docker compose up -d        (run from this folder)
+#   n8n editor : http://localhost:5678
+#   Ollama API : http://localhost:11434  (n8n uses http://ollama:11434 inside the network)
+name: day65-n8n
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.42.6
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=Asia/Seoul
+      - TZ=Asia/Seoul
+      - N8N_SECURE_COOKIE=false
+    volumes:
+      - n8n-data:/home/node/.n8n
+      - ./workflows:/home/node/workflows:ro
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      # Reuse the models downloaded on day 64 by setting OLLAMA_DATA in .env
+      # (default: a new Docker volume, then run: docker compose exec ollama ollama pull gemma3:4b)
+      - ${OLLAMA_DATA:-ollama-data}:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  n8n-data:
+  ollama-data:
