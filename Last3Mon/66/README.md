@@ -51,7 +51,8 @@ Last3Mon/66/
 ├── LAB-02-Q-JSON-AND-PARSE.md        # 2단계 · 할 일을 JSON으로 → 빈칸 채우기 → 참석자
 ├── LAB-03-Q-ITEMS-AND-PARALLEL.md    # 3단계 · 항목 하나씩 · 확인 필요 → 두 갈래 → 어려운 회의록
 ├── VIBE-Q-TURL.md                    # 7교시 바이브 코딩 · turl (curl을 TUI로)
-├── *-A-*.md                          # 강사용 정답본 (학생 저장소에는 없음)
+├── *-A-*.md                          # 정답 해설 (수업이 끝난 뒤 공개)
+├── answers/                          # 과제 정답 워크플로우
 ├── tools/flow.py                     # doctor · check · push · off · call · test
 ├── cases/                            # lab01 · lab01-challenge · lab02 · lab02-challenge · lab03
 ├── requests/                         # weekly · no-action · empty · no-title · vendor
