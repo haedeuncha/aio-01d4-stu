@@ -4,6 +4,7 @@
 - 교과목: 노코드 멀티 에이전트 워크플로우 설계 및 운영
 - 단원: AI 워크플로우 설계 및 구현
 - 강의 자료: [Lecture/67](../../Lecture/67/README.md)
+- 하루 수강 안내: [LECTURE-67.md](LECTURE-67.md) (수업 준비부터 마칠 때까지 순서대로)
 - 66일차처럼 n8n 노드를 손으로 끌어다 놓지 않습니다. CLI 코딩 에이전트(Codex · Claude Code · Antigravity)에게 요청문으로 워크플로우 JSON을 만들게 하고, 우리는 **실행 결과를 테스트로 확인**합니다. 오늘은 정해진 흐름 대신 **Agent가 Tool을 고르는** 워크플로우입니다.
 
 ## 오늘 만드는 업무: 사내 IT 문의 응답 Agent
@@ -70,7 +71,7 @@ Last3Mon/67/
 [실습 준비](../../Lecture/67/00-DAY67-PREP.md)를 끝내 주세요. 요약:
 
 ```bash
-cd ~/aio-01d4-stu/Last3Mon/65/n8n && docker compose start         # 65일차 n8n (설치 폴더 ~/day65-n8n)
+cd ~/aio-01d4-stu/Last3Mon/65/n8n && docker compose start         # 65일차 n8n (Ollama는 쓰지 않음 · 처음 한 번 PREP 1절대로 끄기)
 cd ~/aio-01d4-stu/Last3Mon/67/data-api && docker compose up -d --force-recreate
 cd ~/aio-01d4-stu/Last3Mon/67 && uv run tools/flow.py doctor      # 마지막 줄 ready
 ```

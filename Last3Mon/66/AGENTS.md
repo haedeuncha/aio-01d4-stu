@@ -21,10 +21,10 @@
 | 항목 | 값 |
 | --- | --- |
 | n8n | 2.42.6, 65일차 공식 설치 `~/day65-n8n` (Docker 프로젝트 `day65-n8n`, 컨테이너 보통 `day65-n8n-n8n-1`), 브라우저 http://localhost:5678 |
-| n8n 켜고 끄기 | `~/aio-01d4-stu/Last3Mon/65/n8n`에서 `docker compose start/stop` (사람이 함) |
+| n8n 켜고 끄기 | `~/aio-01d4-stu/Last3Mon/65/n8n`에서 `docker compose start/stop` (사람이 함, Ollama 컨테이너는 없음) |
 | 게시된 웹훅 주소 | 밖에서 `http://localhost:5678/webhook/<path>`, **n8n 안에서도** `http://localhost:5678/webhook/<path>` (같은 컨테이너) |
 | OpenAI Credential | id `openAiCourse0001`, name `OpenAI (.env)`, 모델 `gpt-4.1-mini` |
-| Ollama Credential (대체) | id `ollamaLocal0001`, name `Ollama local`, 모델 `qwen2.5:3b` |
+| 다른 Credential | 쓰지 않음 (Ollama 등 없음, LLM은 모두 위 OpenAI Credential) |
 | 데이터 API | 오늘은 쓰지 않음 (67일차부터) |
 
 ## 3. 오늘 만드는 것의 계약 (요청에 다른 말이 없으면 이대로)

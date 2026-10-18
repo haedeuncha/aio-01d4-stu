@@ -58,7 +58,7 @@ n8n 화면의 워크플로우를 **Download**하면 JSON 파일이 됩니다. �
 | 에이전트가 모르는 것 | AGENTS.md에 적은 것 |
 | --- | --- |
 | 우리 n8n 버전에서 되는 노드 버전 | 실행 확인한 노드 JSON (`typeVersion` 포함) |
-| Credential | `openAiCourse0001` · `ollamaLocal0001` id만 사용, 키는 쓰지 않음 |
+| Credential | `openAiCourse0001` id만 사용 (LLM은 OpenAI 하나), 키는 쓰지 않음 |
 | 오늘 만들 것의 계약 | 웹훅 `my-meeting`, 입력 `title`·`notes`, Lab마다 결과 모양 |
 | 일하는 순서 | `my-work/`에 쓰기 → `check` → 사람이 push·test |
 | 하지 말 것 | 테스트 기대 결과 바꾸기, 도구 고치기, 키 출력 |

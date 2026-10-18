@@ -19,15 +19,17 @@ flowchart LR
 | 무엇 | 어디 |
 | --- | --- |
 | n8n 공식 설치 (compose.yml · .env) | `~/day65-n8n` (65일차 [SETUP-N8N](../../Last3Mon/65/SETUP-N8N.md) 5단계, 지우지 않음) |
-| 켜고 끄기 (n8n + Ollama) | `~/aio-01d4-stu/Last3Mon/65/n8n` (`~/day65-n8n/compose.yml`을 불러 씀) |
+| 켜고 끄기 (n8n) | `~/aio-01d4-stu/Last3Mon/65/n8n` (`~/day65-n8n/compose.yml`을 불러 씀) |
 
 ```bash
-sudo systemctl stop ollama          # WSL의 Ollama가 켜져 있다면 멈춤
+sudo systemctl disable --now ollama 2>/dev/null   # WSL에 설치한 Ollama가 있으면 끄고 자동 시작도 끔
 cd ~/aio-01d4-stu/Last3Mon/65/n8n
+docker compose rm -sf ollama                      # Ollama 컨테이너가 있으면 지움 (없으면 그냥 지나감)
 docker compose start
 ```
 
-- `~/day65-n8n`에서 `docker compose start`로 켰어도 n8n은 같은 것입니다 (Ollama만 빠짐).
+- **66일차부터 LLM은 OpenAI API 키(`Last3Mon/.env`, Credential `OpenAI (.env)`)만 씁니다.** Ollama는 쓰지 않으므로 위처럼 꺼서 메모리를 아낍니다. 다음 날부터는 같은 명령을 그대로 써도 됩니다.
+- `~/day65-n8n`에서 `docker compose start`로 켰어도 n8n은 같은 것입니다.
 - `docker compose start`가 `.../day65-n8n/compose.yml: no such file or directory`이면 n8n을 홈이 아닌 곳에 설치한 것입니다. 65일차 SETUP-N8N 문제 해결 표대로 `Last3Mon/65/n8n/.env`에 `N8N_HOME=<설치 폴더>`를 적습니다 (`flow.py`도 이 값을 읽습니다).
 
 ## 2. CLI 코딩 에이전트 (전날 필수, 10분)
@@ -56,7 +58,6 @@ uv run tools/flow.py doctor
 ✔ n8n http://localhost:5678
 ! data API http://localhost:8800 (not used today)
 ✔ credential 'OpenAI (.env)' (openAiCourse0001)
-✔ credential 'Ollama local' (ollamaLocal0001)
 ✔ node catalog (for check)
 ✔ CLI coding agent: codex, claude
 ready

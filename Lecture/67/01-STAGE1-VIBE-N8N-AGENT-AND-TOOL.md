@@ -68,7 +68,7 @@ CLI 에이전트는 n8n을 일반적으로는 알지만, **우리 교실의 사�
 | --- | --- |
 | 우리 n8n 버전에서 되는 노드 버전 | 실행 확인한 노드 JSON 9종 (`typeVersion` 포함) |
 | 데이터 API 주소 | n8n 안에서는 `http://data-api:8800` (`localhost` 아님) |
-| Credential | `openAiCourse0001` · `ollamaLocal0001` id만 사용, 키는 쓰지 않음 |
+| Credential | `openAiCourse0001` id만 사용 (LLM은 OpenAI 하나), 키는 쓰지 않음 |
 | 일하는 순서 | `my-work/`에 쓰기 → `check` → 사람이 push·test |
 | 하지 말 것 | 테스트 기대 결과 바꾸기, 도구·데이터 고치기, 키 출력 |
 

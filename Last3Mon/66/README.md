@@ -66,7 +66,7 @@ Last3Mon/66/
 [실습 준비](../../Lecture/66/00-DAY66-PREP.md)를 끝내 주세요 (CLI 코딩 에이전트 설치·로그인 포함). 요약:
 
 ```bash
-cd ~/aio-01d4-stu/Last3Mon/65/n8n && docker compose start         # 65일차 n8n (설치 폴더 ~/day65-n8n)
+cd ~/aio-01d4-stu/Last3Mon/65/n8n && docker compose start         # 65일차 n8n (Ollama는 쓰지 않음 · 처음 한 번 PREP 1절대로 끄기)
 cd ~/aio-01d4-stu/Last3Mon/66 && uv run tools/flow.py doctor      # 마지막 줄 ready
 ```
 

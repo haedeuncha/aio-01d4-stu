@@ -54,7 +54,7 @@ flowchart LR
 | 작게 나누기 | 예제 1 → 예제 2 → 과제 | 1단계 → 2단계 → 3단계 |
 | 확인 도구 | `flow.py check · push · test` | `uv run tman`, `pytest` |
 | 기대 결과 | `cases/*.json` (업무 규칙) | R1~R4 확인 표, 테스트 |
-| 바꿔 끼우기 | Chat Model (OpenAI ↔ Ollama) | 번역기 (실제 LLM ↔ 가짜) |
+| 바꿔 끼우기 | Chat Model 노드 (모델 이름만 바꾸면 교체) | 번역기 (실제 LLM ↔ 가짜) |
 | 비밀 지키기 | Credential id만, 키 없음 | `OPENAI_API_KEY` 환경 변수 |
 
 ## 4. 강사 바이브 코딩 (15분)

@@ -82,9 +82,8 @@ RECOMMENDED = {
     "n8n-nodes-base.httpRequestTool": 4.2,
     "@n8n/n8n-nodes-langchain.agent": 3.1,
     "@n8n/n8n-nodes-langchain.lmChatOpenAi": 1.2,
-    "@n8n/n8n-nodes-langchain.lmChatOllama": 1,
 }
-COURSE_CREDENTIALS = {"openAiCourse0001": "OpenAI (.env)", "ollamaLocal0001": "Ollama local"}
+COURSE_CREDENTIALS = {"openAiCourse0001": "OpenAI (.env)"}  # OpenAI only from day 66 (no Ollama)
 CONNECTION_TYPES = {"main", "ai_tool", "ai_languageModel", "ai_memory", "ai_outputParser"}
 SECRET = re.compile(r"\bsk-[A-Za-z0-9_-]{16,}")
 

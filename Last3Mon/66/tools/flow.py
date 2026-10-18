@@ -83,14 +83,13 @@ RECOMMENDED = {
     "n8n-nodes-base.httpRequestTool": 4.2,
     "@n8n/n8n-nodes-langchain.agent": 3.1,
     "@n8n/n8n-nodes-langchain.lmChatOpenAi": 1.2,
-    "@n8n/n8n-nodes-langchain.lmChatOllama": 1,
     "@n8n/n8n-nodes-langchain.vectorStoreInMemory": 1.3,
     "@n8n/n8n-nodes-langchain.embeddingsOpenAi": 1.2,
     "@n8n/n8n-nodes-langchain.documentDefaultDataLoader": 1.1,
 }
 USES_DATA_API = False  # day 66 labs do not call the data API
 AGENT_HOOKS: tuple[str, ...] = ()  # no ready-made agents on day 66
-COURSE_CREDENTIALS = {"openAiCourse0001": "OpenAI (.env)", "ollamaLocal0001": "Ollama local"}
+COURSE_CREDENTIALS = {"openAiCourse0001": "OpenAI (.env)"}  # OpenAI only from day 66 (no Ollama)
 CONNECTION_TYPES = {"main", "ai_tool", "ai_languageModel", "ai_memory", "ai_outputParser", "ai_embedding", "ai_document"}
 SECRET = re.compile(r"\bsk-[A-Za-z0-9_-]{16,}")
 
