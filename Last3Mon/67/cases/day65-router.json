@@ -1,0 +1,86 @@
+{
+  "webhook": "request-route",
+  "cases": [
+    {
+      "name": "account",
+      "body": {
+        "text": "계정이 잠겼어요",
+        "user": "kim"
+      },
+      "expect": {
+        "equals": {
+          "category": "account",
+          "team": "계정 관리 담당"
+        }
+      }
+    },
+    {
+      "name": "network",
+      "body": {
+        "text": "VPN 접속이 끊겨요",
+        "user": "kim"
+      },
+      "expect": {
+        "equals": {
+          "category": "network",
+          "team": "네트워크 담당"
+        }
+      }
+    },
+    {
+      "name": "device",
+      "body": {
+        "text": "프린터가 고장났어요",
+        "user": "kim"
+      },
+      "expect": {
+        "equals": {
+          "category": "device",
+          "team": "장비 지원 담당"
+        }
+      }
+    },
+    {
+      "name": "software",
+      "body": {
+        "text": "프로그램 설치 요청",
+        "user": "kim"
+      },
+      "expect": {
+        "equals": {
+          "category": "software",
+          "team": "소프트웨어 담당"
+        }
+      }
+    },
+    {
+      "name": "other",
+      "body": {
+        "text": "점심 메뉴 추천",
+        "user": "kim"
+      },
+      "expect": {
+        "equals": {
+          "category": "other",
+          "team": "IT 문의 접수 창구"
+        }
+      }
+    },
+    {
+      "name": "공백 입력",
+      "body": {
+        "text": "   "
+      },
+      "expect": {
+        "status": 400
+      }
+    },
+    {
+      "name": "입력 누락",
+      "body": {},
+      "expect": {
+        "status": 400
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "webhook": "day65-condition",
+  "cases": [
+    {
+      "name": "긴급 30분",
+      "body": {
+        "priority": "urgent"
+      },
+      "expect": {
+        "equals": {
+          "route": "즉시 담당자 연결",
+          "sla_minutes": 30
+        }
+      }
+    },
+    {
+      "name": "일반 480분",
+      "body": {
+        "priority": "normal"
+      },
+      "expect": {
+        "equals": {
+          "route": "일반 접수",
+          "sla_minutes": 480
+        }
+      }
+    }
+  ]
+}

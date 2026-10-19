@@ -1,0 +1,29 @@
+{
+  "webhook": "my-first-route",
+  "cases": [
+    {
+      "name": "긴급! VPN이 끊겼어요",
+      "body": {
+        "text": "긴급! VPN이 끊겼어요",
+        "user": "kim"
+      },
+      "expect": {
+        "equals": {
+          "route": "즉시 담당자 연결"
+        }
+      }
+    },
+    {
+      "name": "프린터 토너가 떨어졌어요",
+      "body": {
+        "text": "프린터 토너가 떨어졌어요",
+        "user": "kim"
+      },
+      "expect": {
+        "equals": {
+          "route": "일반 접수"
+        }
+      }
+    }
+  ]
+}
