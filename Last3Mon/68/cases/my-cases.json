@@ -1,0 +1,102 @@
+{
+  "webhook": "my-assistant",
+  "cases": [
+    {
+      "name": "공백 message · LLM 호출 전 거절",
+      "body": {
+        "message": " \n\t ",
+        "user": "이준호"
+      },
+      "expect": {
+        "status": 400
+      }
+    },
+    {
+      "name": "message 없음 · 즉시 거절",
+      "body": {
+        "user": "이준호"
+      },
+      "expect": {
+        "status": 400
+      }
+    },
+    {
+      "name": "IT 요청자 없음 · 입력 요청",
+      "body": {
+        "message": "VPN이 계속 끊겨요"
+      },
+      "expect": {
+        "equals": {
+          "count": 1,
+          "results.0.route": "입력 필요",
+          "results.0.agent": "it-agent"
+        },
+        "contains": {
+          "reply": [
+            "user",
+            "요청자"
+          ]
+        }
+      }
+    },
+    {
+      "name": "공백 회의록 · 입력 요청",
+      "body": {
+        "message": "회의록 할 일 정리해줘",
+        "notes": " \n ",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "count": 1,
+          "results.0.route": "입력 필요"
+        },
+        "contains": {
+          "reply": [
+            "회의록"
+          ]
+        }
+      }
+    },
+    {
+      "name": "IT와 회의록 누락 · 다른 업무 계속",
+      "body": {
+        "message": "비밀번호를 잊어버렸어요. 그리고 회의록 할 일도 정리해주세요.",
+        "user": "이준호"
+      },
+      "expect": {
+        "equals": {
+          "count": 2,
+          "results.0.route": "자동 답변",
+          "results.1.route": "입력 필요"
+        },
+        "contains": {
+          "results.0.answer": [
+            "비밀번호 찾기",
+            "휴대폰"
+          ]
+        }
+      }
+    },
+    {
+      "name": "남의 접수 건 · 상세 유출 금지",
+      "body": {
+        "message": "T-1002 처리 상태 알려줘",
+        "user": "이준호"
+      },
+      "expect": {
+        "equals": {
+          "count": 1,
+          "results.0.route": "담당자 연결"
+        },
+        "not_contains": {
+          "reply": [
+            "박서연",
+            "정우성",
+            "처리 중"
+          ]
+        }
+      }
+    }
+  ]
+}

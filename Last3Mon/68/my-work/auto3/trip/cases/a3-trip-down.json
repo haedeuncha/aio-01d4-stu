@@ -1,0 +1,25 @@
+{
+  "webhook": "a3-trip",
+  "cases": [
+    {
+      "name": "일정 Agent 꺼짐 · 나머지는 정상",
+      "body": {
+        "message": "11월 12일부터 14일까지 부산 출장 가. 숙소는 하루 얼마까지 돼? 출장비 신청하고 일정도 잡아 줘.",
+        "user": "이준호"
+      },
+      "expect": {
+        "equals": {
+          "count": 3,
+          "results.0.route": "자동 답변",
+          "results.1.route": "접수 완료",
+          "results.2.route": "담당자 연결"
+        },
+        "contains": {
+          "results.1.answer": [
+            "290,000"
+          ]
+        }
+      }
+    }
+  ]
+}

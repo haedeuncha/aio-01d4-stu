@@ -9,7 +9,7 @@
   uv run tools/flow.py push  agents/*.json my-work/assistant.json   # import + publish (one n8n restart)
   uv run tools/flow.py off   agents/meeting-agent.json  # unpublish (simulate an agent that is down)
   uv run tools/flow.py call  my-assistant requests/composite.json
-  uv run tools/flow.py test  cases/lab02.json [--repeat 3]
+  uv run tools/flow.py test  cases/lab02.json [--repeat 3] [-v]
 
 Run it from the day folder (Last3Mon/68). n8n is the day 65 install (~/day65-n8n, Docker project
 day65-n8n), started from Last3Mon/65/n8n. Environment overrides:
@@ -497,11 +497,17 @@ def cmd_test(args: argparse.Namespace) -> int:
         body = request_body(case.get("body") or case.get("request", "{}"))
         case_hook = (case.get("webhook") or hook).strip("/") if not args.webhook else hook
         for run in range(1, args.repeat + 1):
+            suffix = f" #{run}" if args.repeat > 1 else ""
+            if args.verbose:
+                print(f"\nRequest · {case.get('name', '?')}{suffix} · POST {N8N_URL}/webhook/{case_hook}")
+                print(json.dumps(body, ensure_ascii=False, indent=2), flush=True)
             status, payload, seconds = http("POST", f"{N8N_URL}/webhook/{case_hook}", body)
+            if args.verbose:
+                print(f"Response · HTTP {status} · {seconds:.1f}s")
+                print(json.dumps(payload, ensure_ascii=False, indent=2), flush=True)
             problems = judge(case.get("expect", {}), status, payload)
             passed += not problems
             mark = OK if not problems else BAD
-            suffix = f" #{run}" if args.repeat > 1 else ""
             print(f"{mark} {case.get('name', '?')}{suffix} · {seconds:.1f}s" + ("" if not problems else " · " + "; ".join(problems)))
             results.append({"case": case.get("name"), "webhook": case_hook, "run": run, "passed": not problems, "problems": problems,
                             "seconds": round(seconds, 1), "status": status, "request": body, "response": payload})
@@ -582,6 +588,7 @@ def main() -> int:
     item = commands.add_parser("test", help="run a test case file")
     item.add_argument("cases")
     item.add_argument("--repeat", type=int, default=1, help="run every case N times")
+    item.add_argument("-v", "--verbose", action="store_true", help="show each JSON request and response with HTTP status")
     item.add_argument("--webhook", help="override the webhook path in the case file")
     item.set_defaults(run=cmd_test)
     args = parser.parse_args()
