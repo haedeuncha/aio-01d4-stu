@@ -2,26 +2,11 @@
   "name": "auto3 · 마케팅 일정 Agent",
   "nodes": [
     {
-      "name": "Note",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -60,
-        80
-      ],
-      "parameters": {
-        "content": "## 📅 auto3 · 마케팅 일정 Agent\n`POST /webhook/a3-content-schedule` · 입력 `title`, `date`, `user` (+ `end_date`)\nLLM 없이 Code만: 날짜 검사 · 지난 날짜 거절 · 겹치는 일정 알림",
-        "width": 760,
-        "height": 160,
-        "color": 6
-      }
-    },
-    {
       "name": "Schedule webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        0,
+        65,
         300
       ],
       "parameters": {
@@ -36,7 +21,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        220,
+        495,
         300
       ],
       "parameters": {
@@ -69,8 +54,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        440,
-        480
+        495,
+        520
       ],
       "parameters": {
         "respondWith": "json",
@@ -85,7 +70,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        440,
+        925,
         300
       ],
       "parameters": {
@@ -97,7 +82,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        660,
+        1355,
         300
       ],
       "parameters": {
@@ -107,12 +92,77 @@
       }
     },
     {
-      "name": "Note run",
+      "id": "78ea44cc-7ac7-5190-ab16-81167ea11c50",
+      "name": "Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         -60,
-        700
+        -110
+      ],
+      "parameters": {
+        "content": "# ✨ 📅 auto3 · 마케팅 일정 Agent ✨\n`POST /webhook/a3-content-schedule` · 입력 `title`, `date`, `user` (+ `end_date`)\nLLM 없이 Code만: 날짜 검사 · 지난 날짜 거절 · 겹치는 일정 알림",
+        "width": 1640,
+        "height": 190,
+        "color": 6
+      }
+    },
+    {
+      "id": "045fffd4-9141-587c-86cf-0d72e4b34f00",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        110
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 📥 받기 · 입력 확인\n- `Schedule webhook`\n- `Has inputs?`\n- `Reject missing`",
+        "width": 810.0,
+        "height": 600,
+        "color": 5
+      }
+    },
+    {
+      "id": "c8b3e4d7-541d-5e9c-9b85-ae6545c9e9c4",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        770.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 2️⃣ 🧮 Code로 처리 · 검사\n- `Check and save`",
+        "width": 410.0,
+        "height": 600,
+        "color": 1
+      }
+    },
+    {
+      "id": "7d999303-e6ba-59c9-a393-9957e05a0ac6",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1200.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 3️⃣ 📤 답장\n- `Send result`",
+        "width": 380.0,
+        "height": 600,
+        "color": 4
+      }
+    },
+    {
+      "id": "ce0d1ee7-3d41-5686-8936-123e69d22fb5",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        770
       ],
       "parameters": {
         "content": "## ▶ 실행해 보기\n이 워크플로우는 **게시(Published)** 되어 있어서 아래 주소로 바로 부를 수 있어요. 터미널은 `Last3Mon/68` 폴더에서.\n\n**① 요청 하나 보내기 (JSON 그대로)**\n```\nuv run tools/flow.py call a3-content-schedule '{\"title\": \"루미 게시\", \"date\": \"2026-11-02\", \"user\": \"김민지\"}'\n```\n**② 결과 보기**: 화면 위 **Executions** 탭 → 맨 위 실행 → 노드를 눌러 들어온 값 · 나간 값 확인",
@@ -122,12 +172,13 @@
       }
     },
     {
-      "name": "Note who",
+      "id": "f6a3256a-27f6-57e0-8275-93c1d93bf7b1",
+      "name": "Note 5",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -60,
-        1080
+        980,
+        770
       ],
       "parameters": {
         "content": "## 💡 이 Agent는 혼자 쓰기보다\n라우터 **`a3-content`** 가 HTTP로 부릅니다.\n직원 요청 한 문장은 라우터에 보내세요.",

@@ -125,7 +125,7 @@
       "typeVersion": 1.1,
       "position": [
         820,
-        470
+        540
       ],
       "parameters": {
         "respondWith": "json",
@@ -211,7 +211,7 @@
       "parameters": {
         "content": "## ⛔ 빈 요청\n`{\"count\": 0, \"tasks\": []}` · **400**",
         "width": 300,
-        "height": 230,
+        "height": 300,
         "color": 3
       }
     }

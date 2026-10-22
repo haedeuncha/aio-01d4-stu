@@ -505,17 +505,11 @@ def cmd_test(args: argparse.Namespace) -> int:
         body = request_body(case.get("body") or case.get("request", "{}"))
         case_hook = (case.get("webhook") or hook).strip("/") if not args.webhook else hook
         for run in range(1, args.repeat + 1):
-            suffix = f" #{run}" if args.repeat > 1 else ""
-            if args.verbose:
-                print(f"\nRequest · {case.get('name', '?')}{suffix} · POST {N8N_URL}/webhook/{case_hook}")
-                print(json.dumps(body, ensure_ascii=False, indent=2), flush=True)
             status, payload, seconds = http("POST", f"{N8N_URL}/webhook/{case_hook}", body)
-            if args.verbose:
-                print(f"Response · HTTP {status} · {seconds:.1f}s")
-                print(json.dumps(payload, ensure_ascii=False, indent=2), flush=True)
             problems = judge(case.get("expect", {}), status, payload)
             passed += not problems
             mark = OK if not problems else BAD
+            suffix = f" #{run}" if args.repeat > 1 else ""
             print(f"{mark} {case.get('name', '?')}{suffix} · {seconds:.1f}s" + ("" if not problems else " · " + "; ".join(problems)))
             if args.verbose:
                 show_json(f"→ request  POST /webhook/{case_hook}", body)
@@ -599,7 +593,6 @@ def main() -> int:
     item = commands.add_parser("test", help="run a test case file")
     item.add_argument("cases")
     item.add_argument("--repeat", type=int, default=1, help="run every case N times")
-    item.add_argument("-v", "--verbose", action="store_true", help="show each JSON request and response with HTTP status")
     item.add_argument("--webhook", help="override the webhook path in the case file")
     item.add_argument("-v", "--verbose", action="store_true", help="print the request and response JSON of every run")
     item.set_defaults(run=cmd_test)

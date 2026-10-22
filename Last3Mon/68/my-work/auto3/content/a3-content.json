@@ -2,26 +2,11 @@
   "name": "auto3 · 마케팅 콘텐츠 제작",
   "nodes": [
     {
-      "name": "Note title",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -60,
-        -200
-      ],
-      "parameters": {
-        "content": "# 🎨 auto3 · 마케팅 콘텐츠 제작\n`POST /webhook/a3-content` · 입력 `message`, `user`, `product{name, price, features}`, `text`(선택), `channels`(선택)\n**차례대로**: 소개글 → (그 글로) SNS → 게시 일정. 앞 단계가 실패하면 뒤 단계는 부르지 않고 이유를 알려 줌",
-        "width": 3000,
-        "height": 190,
-        "color": 6
-      }
-    },
-    {
       "name": "Content webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        0,
+        65,
         400
       ],
       "parameters": {
@@ -36,7 +21,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        220,
+        495,
         400
       ],
       "parameters": {
@@ -69,7 +54,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        440,
+        495,
         620
       ],
       "parameters": {
@@ -85,7 +70,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        440,
+        860,
         400
       ],
       "parameters": {
@@ -102,8 +87,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        400,
-        620
+        860,
+        630
       ],
       "parameters": {
         "model": {
@@ -127,7 +112,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        760,
+        1365,
         400
       ],
       "parameters": {
@@ -139,7 +124,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        980,
+        1795,
         400
       ],
       "parameters": {
@@ -172,7 +157,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1200,
+        1795,
         620
       ],
       "parameters": {
@@ -186,7 +171,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1200,
+        2225,
         400
       ],
       "parameters": {
@@ -219,7 +204,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1420,
+        2655,
         260
       ],
       "parameters": {
@@ -243,7 +228,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1640,
+        3085,
         260
       ],
       "parameters": {
@@ -255,7 +240,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1860,
+        3515,
         400
       ],
       "parameters": {
@@ -288,7 +273,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2080,
+        3945,
         260
       ],
       "parameters": {
@@ -312,7 +297,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2300,
+        4375,
         260
       ],
       "parameters": {
@@ -324,7 +309,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2520,
+        4805,
         400
       ],
       "parameters": {
@@ -357,7 +342,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2740,
+        5235,
         260
       ],
       "parameters": {
@@ -381,7 +366,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2960,
+        5665,
         260
       ],
       "parameters": {
@@ -393,7 +378,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3180,
+        6095,
         400
       ],
       "parameters": {
@@ -405,7 +390,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        3400,
+        6525,
         400
       ],
       "parameters": {
@@ -415,12 +400,141 @@
       }
     },
     {
-      "name": "Note order",
+      "id": "15064494-1b4c-5c5f-a405-623466404aa7",
+      "name": "Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1180,
-        840
+        -60,
+        -150
+      ],
+      "parameters": {
+        "content": "# ✨ 🎨 auto3 · 마케팅 콘텐츠 제작 ✨\n`POST /webhook/a3-content` · 입력 `message`, `user`, `product{name, price, features}`, `text`(선택), `channels`(선택)\n**차례대로**: 소개글 → (그 글로) SNS → 게시 일정. 앞 단계가 실패하면 뒤 단계는 부르지 않고 이유를 알려 줌",
+        "width": 6810,
+        "height": 190,
+        "color": 6
+      }
+    },
+    {
+      "id": "446731e2-cef2-5a12-a2b7-8aed32c15f38",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        70
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 받기\n📥 `message` · `user` · `product`",
+        "width": 810.0,
+        "height": 740,
+        "color": 5
+      }
+    },
+    {
+      "id": "2883f0fb-7f39-591b-a30b-871d4437ecce",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        770.0,
+        70
+      ],
+      "parameters": {
+        "content": "## 2️⃣ 할 일 정하기 (LLM)\n📝 copy · sns · schedule",
+        "width": 420.0,
+        "height": 740,
+        "color": 6
+      }
+    },
+    {
+      "id": "be325d37-6089-5395-816d-3ef93876b429",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1210.0,
+        70
+      ],
+      "parameters": {
+        "content": "## 3️⃣ 계획 검사 (Code)\n🧹 제품 · 원문 · 날짜 확인\n❓ 빠지면 입력 필요",
+        "width": 840.0,
+        "height": 740,
+        "color": 1
+      }
+    },
+    {
+      "id": "2f27828b-4a89-5b84-abb3-603b67e13eee",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2070.0,
+        70
+      ],
+      "parameters": {
+        "content": "## 4️⃣ 소개글\n✍️ 필요할 때만 a3-copy",
+        "width": 1270.0,
+        "height": 740,
+        "color": 2
+      }
+    },
+    {
+      "id": "5be38564-0349-5a46-9966-209d8c30cf01",
+      "name": "Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3360.0,
+        70
+      ],
+      "parameters": {
+        "content": "## 5️⃣ SNS 글\n📱 소개글을 받아 a3-sns",
+        "width": 1270.0,
+        "height": 740,
+        "color": 4
+      }
+    },
+    {
+      "id": "d387156d-372a-5a90-996d-2ce2a855fd9b",
+      "name": "Note 6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4650.0,
+        70
+      ],
+      "parameters": {
+        "content": "## 6️⃣ 게시 일정\n📅 a3-content-schedule",
+        "width": 1270.0,
+        "height": 740,
+        "color": 3
+      }
+    },
+    {
+      "id": "1ae4fe14-6469-5d82-9dc2-fb4d27c063eb",
+      "name": "Note 7",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5940.0,
+        70
+      ],
+      "parameters": {
+        "content": "## 7️⃣ 답장\n✍️ reply",
+        "width": 810.0,
+        "height": 740,
+        "color": 6
+      }
+    },
+    {
+      "id": "6258b7c8-ef1f-52de-8131-22ec51cb4aff",
+      "name": "Note 8",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        870
       ],
       "parameters": {
         "content": "## 🔗 왜 Switch가 아니라 차례대로?\nSNS 글은 **소개글 결과**가 있어야 만든다 (업무 사이에 순서가 있음).\n각 단계는 `run.*`이 true일 때만 부르고, 결과는 `results`에 채워 다음 단계로 넘긴다.\nSNS에 보내는 글은 LLM이 아니라 소개글 Agent의 응답에서 가져온다.",
@@ -430,117 +544,13 @@
       }
     },
     {
-      "name": "Step 1",
+      "id": "55eaedbe-a1cf-5732-9b7f-9fe4e67ccecf",
+      "name": "Note 9",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -40,
-        180
-      ],
-      "parameters": {
-        "content": "## 1️⃣ 받기\n📥 `message` · `user` · `product`",
-        "width": 440,
-        "height": 600,
-        "color": 5
-      }
-    },
-    {
-      "name": "Step 2",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        400,
-        180
-      ],
-      "parameters": {
-        "content": "## 2️⃣ 할 일 정하기 (LLM)\n📝 copy · sns · schedule",
-        "width": 320,
-        "height": 600,
-        "color": 6
-      }
-    },
-    {
-      "name": "Step 3",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        740,
-        180
-      ],
-      "parameters": {
-        "content": "## 3️⃣ 계획 검사 (Code)\n🧹 제품 · 원문 · 날짜 확인\n❓ 빠지면 입력 필요",
-        "width": 420,
-        "height": 600,
-        "color": 1
-      }
-    },
-    {
-      "name": "Step 4",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        1180,
-        180
-      ],
-      "parameters": {
-        "content": "## 4️⃣ 소개글\n✍️ 필요할 때만 a3-copy",
-        "width": 640,
-        "height": 600,
-        "color": 2
-      }
-    },
-    {
-      "name": "Step 5",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        1840,
-        180
-      ],
-      "parameters": {
-        "content": "## 5️⃣ SNS 글\n📱 소개글을 받아 a3-sns",
-        "width": 640,
-        "height": 600,
-        "color": 4
-      }
-    },
-    {
-      "name": "Step 6",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        2500,
-        180
-      ],
-      "parameters": {
-        "content": "## 6️⃣ 게시 일정\n📅 a3-content-schedule",
-        "width": 640,
-        "height": 600,
-        "color": 3
-      }
-    },
-    {
-      "name": "Step 7",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        3160,
-        180
-      ],
-      "parameters": {
-        "content": "## 7️⃣ 답장\n✍️ reply",
-        "width": 440,
-        "height": 600,
-        "color": 6
-      }
-    },
-    {
-      "name": "Note run",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -60,
-        840
+        1280,
+        870
       ],
       "parameters": {
         "content": "## ▶ 실행해 보기\n이 워크플로우는 **게시(Published)** 되어 있어서 아래 주소로 바로 부를 수 있어요. 터미널은 `Last3Mon/68` 폴더에서.\n\n**① 가장 쉬운 방법 (답을 읽기 좋게 보여 줌)**\n```\nuv run my-work/auto3/ask.py content \"소개글 써 주고 인스타용으로 줄여 줘\" --user 김민지 --product my-work/auto3/content/requests/product.json\n```\n**② 요청 하나 보내기 (JSON 그대로)**\n```\nuv run tools/flow.py call a3-content '{\"message\": \"신제품 소개글 써 주고, 인스타랑 X용으로 줄여 줘. 11월 2일에 올리게 일정도 잡아 줘.\", \"user\": \"김민지\", \"product\": {\"name\": \"루미 무선 이어폰\", \"price\": 89000, \"features\": [\"노이즈 캔슬링\", \"30시간 재생\", \"IPX5 방수\"]}}'\n```\n**③ 결과 보기**: 화면 위 **Executions** 탭 → 맨 위 실행 → 노드를 눌러 들어온 값 · 나간 값 확인",

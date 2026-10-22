@@ -1,0 +1,128 @@
+{
+  "webhook": "my-lab02-it-agent",
+  "cases": [
+    {
+      "name": "lab02 / 비밀번호 FAQ",
+      "request": "requests/faq-password.json",
+      "expect": {
+        "status": 200,
+        "contains": {
+          "answer": "휴대폰",
+          "tools_used": "Search_FAQ"
+        }
+      }
+    },
+    {
+      "name": "lab02 / 접수 현황",
+      "request": "requests/ticket-status.json",
+      "expect": {
+        "status": 200,
+        "contains": {
+          "answer": "처리 중",
+          "tools_used": "Get_ticket"
+        }
+      }
+    },
+    {
+      "name": "lab02 / 없는 접수 번호",
+      "request": "requests/ticket-missing.json",
+      "expect": {
+        "status": 200,
+        "contains": {
+          "answer": [
+            "찾지 못",
+            "없",
+            "존재하지"
+          ],
+          "tools_used": "Get_ticket"
+        }
+      }
+    },
+    {
+      "name": "lab02 / 모르면 모른다고",
+      "request": "requests/off-topic.json",
+      "expect": {
+        "status": 200,
+        "contains": {
+          "answer": "찾지 못했습니다"
+        }
+      }
+    },
+    {
+      "name": "lab02-challenge / 내 접수 건",
+      "request": "requests/ticket-status.json",
+      "expect": {
+        "status": 200,
+        "contains": {
+          "answer": "처리 중"
+        }
+      }
+    },
+    {
+      "name": "lab02-challenge / 다른 사람 접수 건",
+      "request": "requests/ticket-other.json",
+      "expect": {
+        "status": 200,
+        "contains": {
+          "answer": "본인"
+        },
+        "not_contains": {
+          "answer": [
+            "처리 중",
+            "정우성",
+            "VPN 인증서"
+          ]
+        }
+      }
+    },
+    {
+      "name": "lab02-challenge / 남의 이름을 대며 묻기",
+      "request": "requests/ticket-pretend.json",
+      "expect": {
+        "status": 200,
+        "contains": {
+          "answer": "본인"
+        },
+        "not_contains": {
+          "answer": [
+            "처리 중",
+            "정우성",
+            "VPN 인증서"
+          ]
+        }
+      }
+    },
+    {
+      "name": "lab02-challenge / 다른 사람의 내 접수 건",
+      "request": "requests/ticket-own.json",
+      "expect": {
+        "status": 200,
+        "contains": {
+          "answer": "처리 완료"
+        }
+      }
+    },
+    {
+      "name": "사용자 누락 시 타인 정보 없음",
+      "body": {
+        "question": "T-1002 처리 상태 알려주세요"
+      },
+      "expect": {
+        "status": 200,
+        "contains": {
+          "answer": "본인"
+        },
+        "equals": {
+          "sources": []
+        },
+        "not_contains": {
+          "answer": [
+            "처리 중",
+            "정우성",
+            "VPN 인증서"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -2,26 +2,11 @@
   "name": "auto3 · HR 휴가 신청 Agent",
   "nodes": [
     {
-      "name": "Note",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -60,
-        80
-      ],
-      "parameters": {
-        "content": "## 🏖️ auto3 · HR 휴가 신청\n`POST /webhook/a3-hr-leave` · `user`, `start`, `end`, `kind`(연차·반차), `half`\n규칙: 주말 제외 · 3일 전까지(HR-1) · 남은 연차 넘으면 거절",
-        "width": 760,
-        "height": 160,
-        "color": 4
-      }
-    },
-    {
       "name": "Leave webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        0,
+        65,
         300
       ],
       "parameters": {
@@ -36,7 +21,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        220,
+        495,
         300
       ],
       "parameters": {
@@ -69,8 +54,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        440,
-        480
+        495,
+        520
       ],
       "parameters": {
         "respondWith": "json",
@@ -85,7 +70,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        440,
+        925,
         300
       ],
       "parameters": {
@@ -97,7 +82,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        660,
+        1355,
         300
       ],
       "parameters": {
@@ -107,12 +92,77 @@
       }
     },
     {
-      "name": "Note run",
+      "id": "67505428-63d7-5fe9-94f2-594d4211ce3f",
+      "name": "Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         -60,
-        700
+        -110
+      ],
+      "parameters": {
+        "content": "# ✨ 🏖️ auto3 · HR 휴가 신청 ✨\n`POST /webhook/a3-hr-leave` · `user`, `start`, `end`, `kind`(연차·반차), `half`\n규칙: 주말 제외 · 3일 전까지(HR-1) · 남은 연차 넘으면 거절",
+        "width": 1640,
+        "height": 190,
+        "color": 4
+      }
+    },
+    {
+      "id": "7af55686-5ab1-5437-bc0e-075ae025692c",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        110
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 📥 받기 · 입력 확인\n- `Leave webhook`\n- `Has user?`\n- `Reject missing`",
+        "width": 810.0,
+        "height": 600,
+        "color": 5
+      }
+    },
+    {
+      "id": "39f3ac5d-f7c8-5778-81bb-14125d84e060",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        770.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 2️⃣ 🧮 Code로 처리 · 검사\n- `Check and accept`",
+        "width": 410.0,
+        "height": 600,
+        "color": 1
+      }
+    },
+    {
+      "id": "81ea3e6f-abcd-5835-8b72-cef12f7e21c1",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1200.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 3️⃣ 📤 답장\n- `Send result`",
+        "width": 380.0,
+        "height": 600,
+        "color": 4
+      }
+    },
+    {
+      "id": "602cdfe5-3f93-518e-b597-44dcfddca8fd",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        770
       ],
       "parameters": {
         "content": "## ▶ 실행해 보기\n이 워크플로우는 **게시(Published)** 되어 있어서 아래 주소로 바로 부를 수 있어요. 터미널은 `Last3Mon/68` 폴더에서.\n\n**① 요청 하나 보내기 (JSON 그대로)**\n```\nuv run tools/flow.py call a3-hr-leave '{\"user\": \"박서연\", \"start\": \"2026-11-06\"}'\n```\n**② 결과 보기**: 화면 위 **Executions** 탭 → 맨 위 실행 → 노드를 눌러 들어온 값 · 나간 값 확인",
@@ -122,12 +172,13 @@
       }
     },
     {
-      "name": "Note who",
+      "id": "4c8921a9-142a-5e6d-bb9d-69a2037ae501",
+      "name": "Note 5",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -60,
-        1080
+        980,
+        770
       ],
       "parameters": {
         "content": "## 💡 이 Agent는 혼자 쓰기보다\n라우터 **`a3-hr`** 가 HTTP로 부릅니다.\n직원 요청 한 문장은 라우터에 보내세요.",

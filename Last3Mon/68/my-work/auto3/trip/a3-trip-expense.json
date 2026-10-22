@@ -2,26 +2,11 @@
   "name": "auto3 · 출장비 신청 Agent",
   "nodes": [
     {
-      "name": "Note",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -60,
-        80
-      ],
-      "parameters": {
-        "content": "## 💳 auto3 · 출장비 신청\n`POST /webhook/a3-trip-expense` · `user`, `city`, `start`, `end`, `transport`\n💡 금액은 Code가 규정표로 계산 (LLM 아님) · 7박/100만 원 넘으면 팀장 결재",
-        "width": 820,
-        "height": 160,
-        "color": 3
-      }
-    },
-    {
       "name": "Expense webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        0,
+        65,
         300
       ],
       "parameters": {
@@ -36,7 +21,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        220,
+        495,
         300
       ],
       "parameters": {
@@ -69,8 +54,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        440,
-        480
+        495,
+        520
       ],
       "parameters": {
         "respondWith": "json",
@@ -85,7 +70,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        440,
+        925,
         300
       ],
       "parameters": {
@@ -97,7 +82,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        660,
+        1355,
         300
       ],
       "parameters": {
@@ -107,12 +92,77 @@
       }
     },
     {
-      "name": "Note run",
+      "id": "4347c823-c300-5f3a-be96-58b437da5ede",
+      "name": "Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         -60,
-        700
+        -110
+      ],
+      "parameters": {
+        "content": "# ✨ 💳 auto3 · 출장비 신청 ✨\n`POST /webhook/a3-trip-expense` · `user`, `city`, `start`, `end`, `transport`\n💡 금액은 Code가 규정표로 계산 (LLM 아님) · 7박/100만 원 넘으면 팀장 결재",
+        "width": 1640,
+        "height": 190,
+        "color": 3
+      }
+    },
+    {
+      "id": "401f3ef6-e4a5-56ac-8157-31c7d1601df1",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        110
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 📥 받기 · 입력 확인\n- `Expense webhook`\n- `Has user?`\n- `Reject missing`",
+        "width": 810.0,
+        "height": 600,
+        "color": 5
+      }
+    },
+    {
+      "id": "1039a36a-d6b8-5c7b-ac49-5fc5dda8e769",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        770.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 2️⃣ 🧮 Code로 처리 · 검사\n- `Calculate and accept`",
+        "width": 410.0,
+        "height": 600,
+        "color": 1
+      }
+    },
+    {
+      "id": "50e7ae4c-fc43-52b3-845d-2c9674cc8ac7",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1200.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 3️⃣ 📤 답장\n- `Send result`",
+        "width": 380.0,
+        "height": 600,
+        "color": 4
+      }
+    },
+    {
+      "id": "7c872086-5831-5c1b-9e0a-37695af9fe28",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        770
       ],
       "parameters": {
         "content": "## ▶ 실행해 보기\n이 워크플로우는 **게시(Published)** 되어 있어서 아래 주소로 바로 부를 수 있어요. 터미널은 `Last3Mon/68` 폴더에서.\n\n**① 요청 하나 보내기 (JSON 그대로)**\n```\nuv run tools/flow.py call a3-trip-expense '{\"user\": \"이준호\", \"city\": \"부산\", \"start\": \"2026-11-12\", \"end\": \"2026-11-14\"}'\n```\n**② 결과 보기**: 화면 위 **Executions** 탭 → 맨 위 실행 → 노드를 눌러 들어온 값 · 나간 값 확인",
@@ -122,12 +172,13 @@
       }
     },
     {
-      "name": "Note who",
+      "id": "86f774ef-37df-500b-b3b0-dd69a2dc7b63",
+      "name": "Note 5",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -60,
-        1080
+        980,
+        770
       ],
       "parameters": {
         "content": "## 💡 이 Agent는 혼자 쓰기보다\n라우터 **`a3-trip`** 가 HTTP로 부릅니다.\n직원 요청 한 문장은 라우터에 보내세요.",

@@ -2,26 +2,11 @@
   "name": "auto3 · 소개글 Agent",
   "nodes": [
     {
-      "name": "Note",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -60,
-        60
-      ],
-      "parameters": {
-        "content": "## ✍️ auto3 · 소개글 Agent\n`POST /webhook/a3-copy` · `product{name, price, features}`, `tone`\n🔎 LLM 글을 Code가 검사: 제품 이름 · 지어낸 숫자 · 없는 가격 → 어기면 입력만으로 만든 안전한 글",
-        "width": 1000,
-        "height": 180,
-        "color": 6
-      }
-    },
-    {
       "name": "Copy webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        0,
+        65,
         300
       ],
       "parameters": {
@@ -36,7 +21,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        220,
+        495,
         300
       ],
       "parameters": {
@@ -69,7 +54,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        440,
+        495,
         520
       ],
       "parameters": {
@@ -85,7 +70,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        440,
+        860,
         300
       ],
       "parameters": {
@@ -102,8 +87,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        420,
-        520
+        860,
+        530
       ],
       "parameters": {
         "model": {
@@ -127,7 +112,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        760,
+        1365,
         300
       ],
       "parameters": {
@@ -139,7 +124,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        980,
+        1795,
         300
       ],
       "parameters": {
@@ -149,12 +134,93 @@
       }
     },
     {
-      "name": "Note run",
+      "id": "aad871ed-cddf-588f-9f14-e4a34b6f4467",
+      "name": "Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         -60,
-        700
+        -110
+      ],
+      "parameters": {
+        "content": "# ✨ ✍️ auto3 · 소개글 Agent ✨\n`POST /webhook/a3-copy` · `product{name, price, features}`, `tone`\n🔎 LLM 글을 Code가 검사: 제품 이름 · 지어낸 숫자 · 없는 가격 → 어기면 입력만으로 만든 안전한 글",
+        "width": 2080,
+        "height": 190,
+        "color": 6
+      }
+    },
+    {
+      "id": "34e6d748-9aac-5677-8d0b-f692a1daa57c",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        110
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 📥 받기 · 입력 확인\n- `Copy webhook`\n- `Has product?`\n- `Reject missing`",
+        "width": 810.0,
+        "height": 600,
+        "color": 5
+      }
+    },
+    {
+      "id": "949000aa-80bb-5c10-bef2-27fa6a6e34c7",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        770.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 2️⃣ 🤖 AI가 쓰기 (LLM)\n- `Write copy`",
+        "width": 420.0,
+        "height": 600,
+        "color": 6
+      }
+    },
+    {
+      "id": "d8681f2c-4ca8-5c8d-af09-e89df6600a2f",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1210.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 3️⃣ 🧮 Code로 처리 · 검사\n- `Check copy`",
+        "width": 410.0,
+        "height": 600,
+        "color": 1
+      }
+    },
+    {
+      "id": "d3ef53bf-8cf4-5e4b-8c82-6e49d83067b9",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1640.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 4️⃣ 📤 답장\n- `Send result`",
+        "width": 380.0,
+        "height": 600,
+        "color": 4
+      }
+    },
+    {
+      "id": "bb96473e-1c56-5449-bf3a-9f19a21b47ff",
+      "name": "Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        770
       ],
       "parameters": {
         "content": "## ▶ 실행해 보기\n이 워크플로우는 **게시(Published)** 되어 있어서 아래 주소로 바로 부를 수 있어요. 터미널은 `Last3Mon/68` 폴더에서.\n\n**① 요청 하나 보내기 (JSON 그대로)**\n```\nuv run tools/flow.py call a3-copy '{\"product\": {\"name\": \"루미 무선 이어폰\", \"price\": 89000, \"features\": [\"노이즈 캔슬링\"]}, \"user\": \"김민지\"}'\n```\n**② 결과 보기**: 화면 위 **Executions** 탭 → 맨 위 실행 → 노드를 눌러 들어온 값 · 나간 값 확인",
@@ -164,12 +230,13 @@
       }
     },
     {
-      "name": "Note who",
+      "id": "8cf654e7-8669-55f5-aab9-76fc7edf6977",
+      "name": "Note 6",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -60,
-        1080
+        980,
+        770
       ],
       "parameters": {
         "content": "## 💡 이 Agent는 혼자 쓰기보다\n라우터 **`a3-content`** 가 HTTP로 부릅니다.\n직원 요청 한 문장은 라우터에 보내세요.",

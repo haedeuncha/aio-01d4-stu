@@ -6,7 +6,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        0,
+        65,
         400
       ],
       "parameters": {
@@ -21,7 +21,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        220,
+        495,
         400
       ],
       "parameters": {
@@ -54,7 +54,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        440,
+        495,
         620
       ],
       "parameters": {
@@ -70,7 +70,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        440,
+        860,
         400
       ],
       "parameters": {
@@ -87,8 +87,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        400,
-        620
+        860,
+        630
       ],
       "parameters": {
         "model": {
@@ -112,7 +112,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        760,
+        1365,
         400
       ],
       "parameters": {
@@ -124,7 +124,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        980,
+        1795,
         400
       ],
       "parameters": {
@@ -157,7 +157,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1200,
+        1795,
         620
       ],
       "parameters": {
@@ -171,7 +171,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1200,
+        2225,
         400
       ],
       "parameters": {
@@ -183,7 +183,7 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
       "position": [
-        1420,
+        2655,
         400
       ],
       "parameters": {
@@ -319,7 +319,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1660,
+        3085,
         0
       ],
       "parameters": {
@@ -343,7 +343,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1900,
+        3515,
         0
       ],
       "parameters": {
@@ -401,7 +401,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1660,
+        3085,
         200
       ],
       "parameters": {
@@ -425,7 +425,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1900,
+        3515,
         200
       ],
       "parameters": {
@@ -483,7 +483,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1660,
+        3085,
         400
       ],
       "parameters": {
@@ -507,7 +507,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1900,
+        3515,
         400
       ],
       "parameters": {
@@ -565,7 +565,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1900,
+        3515,
         600
       ],
       "parameters": {
@@ -623,7 +623,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1900,
+        3515,
         800
       ],
       "parameters": {
@@ -681,7 +681,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        2140,
+        3945,
         400
       ],
       "parameters": {
@@ -693,7 +693,7 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        2360,
+        4375,
         400
       ],
       "parameters": {
@@ -707,7 +707,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2580,
+        4805,
         400
       ],
       "parameters": {
@@ -719,7 +719,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        2800,
+        5235,
         400
       ],
       "parameters": {
@@ -729,27 +729,141 @@
       }
     },
     {
-      "name": "Note title",
+      "id": "f5d3045c-88dc-546e-8206-acfe16851ba9",
+      "name": "Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         -60,
-        -420
+        -410
       ],
       "parameters": {
-        "content": "# 🧳 auto3 · 출장 준비 비서\n`POST /webhook/a3-trip` · 입력 `message`, `user` · 결과 `{count, results[], reply}`\n`policy`→`a3-trip-policy` · `expense`→`a3-trip-expense` · `schedule`→`a3-trip-schedule` · `other`→담당자 연결 · 빠진 정보→입력 필요",
-        "width": 2980,
-        "height": 170,
+        "content": "# ✨ 🧳 auto3 · 출장 준비 비서 ✨\n`POST /webhook/a3-trip` · 입력 `message`, `user` · 결과 `{count, results[], reply}`\n`policy`→`a3-trip-policy` · `expense`→`a3-trip-expense` · `schedule`→`a3-trip-schedule` · `other`→담당자 연결 · 빠진 정보→입력 필요",
+        "width": 5520,
+        "height": 190,
         "color": 3
       }
     },
     {
-      "name": "Note rules",
+      "id": "42c5914b-201d-5c6d-8e1d-0096780e95f5",
+      "name": "Note 1",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         -60,
-        960
+        -190
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 받기\n📥 `message` · `user`\n🚪 비었으면 400",
+        "width": 810.0,
+        "height": 1180,
+        "color": 5
+      }
+    },
+    {
+      "id": "04ddf4f4-65a8-5cbc-a779-8365b7b85540",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        770.0,
+        -190
+      ],
+      "parameters": {
+        "content": "## 2️⃣ 업무 나누기 (LLM)\n✂️ 한 문장 → 업무 목록\n🤖 모델은 아래 ◇",
+        "width": 420.0,
+        "height": 1180,
+        "color": 6
+      }
+    },
+    {
+      "id": "2a14a95b-0722-5176-96ef-d59577f18f73",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1210.0,
+        -190
+      ],
+      "parameters": {
+        "content": "## 3️⃣ 믿지 말고 검사 (Code)\n🧹 JSON 꺼내기 · 유형 확인\n📅 날짜 · 빠진 정보 검사",
+        "width": 840.0,
+        "height": 1180,
+        "color": 1
+      }
+    },
+    {
+      "id": "cd1017b6-7d56-5d72-bd75-9539c404bd35",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2070.0,
+        -190
+      ],
+      "parameters": {
+        "content": "## 4️⃣ 업무마다 갈래\n🔀 Switch: policy · expense · schedule · other · needs input",
+        "width": 840.0,
+        "height": 1180,
+        "color": 2
+      }
+    },
+    {
+      "id": "3e3ec682-6176-520b-86f2-6a95c7246c6a",
+      "name": "Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2930.0,
+        -190
+      ],
+      "parameters": {
+        "content": "## 5️⃣ 담당 Agent 호출\n📞 HTTP로 다른 워크플로우를 부름\n🛡️ 꺼져 있어도 멈추지 않음",
+        "width": 410.0,
+        "height": 1180,
+        "color": 4
+      }
+    },
+    {
+      "id": "9fd61d7e-02e8-5cf1-95c7-da338efd49af",
+      "name": "Note 6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3360.0,
+        -190
+      ],
+      "parameters": {
+        "content": "## 6️⃣ 모양 맞추기\n🧩 index · route · answer",
+        "width": 410.0,
+        "height": 1180,
+        "color": 5
+      }
+    },
+    {
+      "id": "33444a4d-689f-56d3-b82f-80b7f9f97189",
+      "name": "Note 7",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3790.0,
+        -190
+      ],
+      "parameters": {
+        "content": "## 7️⃣ 모아서 답장\n🧺 Merge → 📦 Aggregate → ✍️ reply",
+        "width": 1670.0,
+        "height": 1180,
+        "color": 6
+      }
+    },
+    {
+      "id": "093c1625-9ba0-55e1-ba1d-f71e6d1134a9",
+      "name": "Note 8",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        1050
       ],
       "parameters": {
         "content": "## 🔒 LLM이 정하지 않는 것\n- `user`는 웹훅 입력에서만 (LLM 결과를 쓰지 않음)\n- 날짜는 LLM이 바꾸고 **Code가 YYYY-MM-DD인지 검사**\n- 권한 · 금액 · 남은 연차는 각 Agent의 Code가 판단\n- 담당 Agent가 꺼져도 그 업무만 담당자 연결 (neverError)",
@@ -759,117 +873,13 @@
       }
     },
     {
-      "name": "Step 1",
+      "id": "090a3f4e-9fcb-5c12-8c8f-760431e7def5",
+      "name": "Note 9",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -40,
-        -100
-      ],
-      "parameters": {
-        "content": "## 1️⃣ 받기\n📥 `message` · `user`\n🚪 비었으면 400",
-        "width": 420,
-        "height": 1000,
-        "color": 5
-      }
-    },
-    {
-      "name": "Step 2",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        400,
-        -100
-      ],
-      "parameters": {
-        "content": "## 2️⃣ 업무 나누기 (LLM)\n✂️ 한 문장 → 업무 목록\n🤖 모델은 아래 ◇",
-        "width": 320,
-        "height": 1000,
-        "color": 6
-      }
-    },
-    {
-      "name": "Step 3",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        740,
-        -100
-      ],
-      "parameters": {
-        "content": "## 3️⃣ 믿지 말고 검사 (Code)\n🧹 JSON 꺼내기 · 유형 확인\n📅 날짜 · 빠진 정보 검사",
-        "width": 400,
-        "height": 1000,
-        "color": 1
-      }
-    },
-    {
-      "name": "Step 4",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        1160,
-        -100
-      ],
-      "parameters": {
-        "content": "## 4️⃣ 업무마다 갈래\n🔀 Switch: policy · expense · schedule · other · needs input",
-        "width": 420,
-        "height": 1000,
-        "color": 2
-      }
-    },
-    {
-      "name": "Step 5",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        1600,
-        -100
-      ],
-      "parameters": {
-        "content": "## 5️⃣ 담당 Agent 호출\n📞 HTTP로 다른 워크플로우를 부름\n🛡️ 꺼져 있어도 멈추지 않음",
-        "width": 240,
-        "height": 1000,
-        "color": 4
-      }
-    },
-    {
-      "name": "Step 6",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        1860,
-        -100
-      ],
-      "parameters": {
-        "content": "## 6️⃣ 모양 맞추기\n🧩 index · route · answer",
-        "width": 240,
-        "height": 1000,
-        "color": 5
-      }
-    },
-    {
-      "name": "Step 7",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        2120,
-        -100
-      ],
-      "parameters": {
-        "content": "## 7️⃣ 모아서 답장\n🧺 Merge → 📦 Aggregate → ✍️ reply",
-        "width": 800,
-        "height": 1000,
-        "color": 6
-      }
-    },
-    {
-      "name": "Note run",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        1100,
-        1000
+        1080,
+        1050
       ],
       "parameters": {
         "content": "## ▶ 실행해 보기\n이 워크플로우는 **게시(Published)** 되어 있어서 아래 주소로 바로 부를 수 있어요. 터미널은 `Last3Mon/68` 폴더에서.\n\n**① 가장 쉬운 방법 (답을 읽기 좋게 보여 줌)**\n```\nuv run my-work/auto3/ask.py trip \"11월 12일부터 14일까지 부산 출장비 신청해 줘\" --user 이준호\n```\n**② 요청 하나 보내기 (JSON 그대로)**\n```\nuv run tools/flow.py call a3-trip '{\"message\": \"11월 12일부터 14일까지 부산 출장 가. 숙소는 하루 얼마까지 돼? 출장비 신청하고 일정도 잡아 줘.\", \"user\": \"이준호\"}'\n```\n**③ 결과 보기**: 화면 위 **Executions** 탭 → 맨 위 실행 → 노드를 눌러 들어온 값 · 나간 값 확인",

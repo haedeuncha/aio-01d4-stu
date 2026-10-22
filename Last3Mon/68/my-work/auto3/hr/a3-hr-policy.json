@@ -2,26 +2,11 @@
   "name": "auto3 · HR 규정 Agent",
   "nodes": [
     {
-      "name": "Note",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -60,
-        60
-      ],
-      "parameters": {
-        "content": "## 📘 auto3 · HR 규정 Agent\n`POST /webhook/a3-hr-policy` · `question`, `user`\n① Code가 규정을 찾고 ② 있을 때만 LLM이 규정대로 설명 ③ 없으면 지어내지 않고 담당자 연결",
-        "width": 1180,
-        "height": 180,
-        "color": 5
-      }
-    },
-    {
       "name": "Policy webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        0,
+        65,
         300
       ],
       "parameters": {
@@ -36,7 +21,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        220,
+        495,
         300
       ],
       "parameters": {
@@ -69,7 +54,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        440,
+        495,
         520
       ],
       "parameters": {
@@ -85,7 +70,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        440,
+        925,
         300
       ],
       "parameters": {
@@ -97,7 +82,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        660,
+        1355,
         300
       ],
       "parameters": {
@@ -130,7 +115,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        880,
+        1720,
         220
       ],
       "parameters": {
@@ -147,8 +132,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        880,
-        440
+        1720,
+        450
       ],
       "parameters": {
         "model": {
@@ -172,7 +157,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1100,
+        2225,
         220
       ],
       "parameters": {
@@ -184,7 +169,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1320,
+        2655,
         220
       ],
       "parameters": {
@@ -198,8 +183,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        880,
-        600
+        1790,
+        650
       ],
       "parameters": {
         "jsCode": "return [{ json: { route: '담당자 연결', answer: `규정집에 없는 내용이라 인사팀 담당자에게 연결했습니다. (질문: ${$json.question})`, sources: [] } }];"
@@ -210,7 +195,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1100,
+        2225,
         600
       ],
       "parameters": {
@@ -220,12 +205,109 @@
       }
     },
     {
-      "name": "Note run",
+      "id": "17888b92-80d4-5c3b-8164-56965e972a5f",
+      "name": "Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         -60,
-        780
+        -190
+      ],
+      "parameters": {
+        "content": "# ✨ 📘 auto3 · HR 규정 Agent ✨\n`POST /webhook/a3-hr-policy` · `question`, `user`\n① Code가 규정을 찾고 ② 있을 때만 LLM이 규정대로 설명 ③ 없으면 지어내지 않고 담당자 연결",
+        "width": 2940,
+        "height": 190,
+        "color": 5
+      }
+    },
+    {
+      "id": "445ba904-5b32-5986-a731-696c3b061052",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        30
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 📥 받기 · 입력 확인\n- `Policy webhook`\n- `Has question?`\n- `Reject missing`",
+        "width": 810.0,
+        "height": 810,
+        "color": 5
+      }
+    },
+    {
+      "id": "c5901639-b748-51e2-841b-fc7766099e57",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        770.0,
+        30
+      ],
+      "parameters": {
+        "content": "## 2️⃣ 🧮 Code로 처리 · 검사\n- `Find rules`\n- `Found rules?`",
+        "width": 840.0,
+        "height": 810,
+        "color": 1
+      }
+    },
+    {
+      "id": "f03dca5e-390a-5e92-a801-64991b67922f",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1630.0,
+        30
+      ],
+      "parameters": {
+        "content": "## 3️⃣ 🤖 AI가 쓰기 (LLM)\n- `Explain rules`\n- `No rule`",
+        "width": 420.0,
+        "height": 810,
+        "color": 6
+      }
+    },
+    {
+      "id": "e0850ac9-3507-5e44-90bb-f7946eb931a2",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2070.0,
+        30
+      ],
+      "parameters": {
+        "content": "## 4️⃣ 🧮 Code로 처리 · 검사\n- `Build answer`\n- `Send no rule`",
+        "width": 410.0,
+        "height": 810,
+        "color": 1
+      }
+    },
+    {
+      "id": "f6d93a3b-527f-599d-9bdd-0a98e0df6830",
+      "name": "Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2500.0,
+        30
+      ],
+      "parameters": {
+        "content": "## 5️⃣ 📤 답장\n- `Send result`",
+        "width": 380.0,
+        "height": 810,
+        "color": 4
+      }
+    },
+    {
+      "id": "d80a237e-a218-545c-801b-6596bd11c913",
+      "name": "Note 6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        900
       ],
       "parameters": {
         "content": "## ▶ 실행해 보기\n이 워크플로우는 **게시(Published)** 되어 있어서 아래 주소로 바로 부를 수 있어요. 터미널은 `Last3Mon/68` 폴더에서.\n\n**① 요청 하나 보내기 (JSON 그대로)**\n```\nuv run tools/flow.py call a3-hr-policy '{\"question\": \"병가 쓰려면 진단서 필요해?\", \"user\": \"박서연\"}'\n```\n**② 결과 보기**: 화면 위 **Executions** 탭 → 맨 위 실행 → 노드를 눌러 들어온 값 · 나간 값 확인",
@@ -235,12 +317,13 @@
       }
     },
     {
-      "name": "Note who",
+      "id": "43903207-0ef4-5b5a-8c3d-41840cf66d51",
+      "name": "Note 7",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -60,
-        1160
+        980,
+        900
       ],
       "parameters": {
         "content": "## 💡 이 Agent는 혼자 쓰기보다\n라우터 **`a3-hr`** 가 HTTP로 부릅니다.\n직원 요청 한 문장은 라우터에 보내세요.",
