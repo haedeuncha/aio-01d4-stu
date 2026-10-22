@@ -1,0 +1,134 @@
+{
+  "id": "modRuleCheck01",
+  "name": "70-3 · 🧩 모듈 · 규칙 검사 v1.1 (modRuleCheck01)",
+  "nodes": [
+    {
+      "name": "When called by another workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "inputSource": "workflowInputs",
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "facts",
+              "type": "string"
+            },
+            {
+              "name": "draft",
+              "type": "string"
+            },
+            {
+              "name": "max_length",
+              "type": "number"
+            },
+            {
+              "name": "required_phrases",
+              "type": "array"
+            },
+            {
+              "name": "allowed_domains",
+              "type": "array"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Rule checks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        340,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Rule checks. Same answer every time, so code, not the LLM.\nconst facts = String($json.facts ?? '');\nconst draft = String($json.draft ?? '');\nconst maxLength = Number($json.max_length ?? 600);\nconst required = Array.isArray($json.required_phrases) ? $json.required_phrases : [];\nconst squeeze = text => text.replace(/\\s+/g, '');\nconst tokens = [...new Set(facts.match(/\\d{1,2}월\\s?\\d{1,2}일|\\d{1,2}:\\d{2}/g) ?? [])];\nconst issues = [];\nconst missing = tokens.filter(token => !squeeze(draft).includes(squeeze(token)));\nif (missing.length) issues.push({ code: 'missing_fact', detail: missing.join(', ') });\nconst personal = draft.match(/01[016789]-?\\d{3,4}-?\\d{4}|[\\w.+-]+@[\\w-]+\\.[\\w.]+/g) ?? [];\nif (personal.length) issues.push({ code: 'personal_info', detail: personal.join(', ') });\nif (draft.length > maxLength) issues.push({ code: 'too_long', detail: `${draft.length}자 (${maxLength}자 이하)` });\nconst absent = required.filter(phrase => !squeeze(draft).includes(squeeze(String(phrase))));\nif (absent.length) issues.push({ code: 'missing_phrase', detail: absent.join(' / ') });\nconst allowed = Array.isArray($json.allowed_domains) && $json.allowed_domains.length ? $json.allowed_domains : ['intra.example.com'];\nconst links = draft.match(/https?:\\/\\/[^\\s)]+/g) ?? [];\n// Host name by text (the Code sandbox has no URL class).\nconst host = url => url.replace(/^https?:\\/\\//, '').split(/[\\/?#:]/)[0].toLowerCase();\nconst outside = links.filter(url => !allowed.includes(host(url)));\nif (outside.length) issues.push({ code: 'external_link', detail: outside.join(', ') });\nreturn [{ json: { passed: issues.length === 0, codes: issues.map(issue => issue.code), issues } }];"
+      }
+    },
+    {
+      "id": "634e443c-b17c-5b56-812d-b8bcbeb20164",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -90.0,
+        -150
+      ],
+      "parameters": {
+        "content": "# ✨ 70-3 · 🧩 모듈 · 규칙 검사 v1.1 (modRuleCheck01) ✨\n> 🔌 웹훅 없음 · 다른 워크플로우가 **Execute Workflow(id `modRuleCheck01`)**로 부르는 부품\n\n결과 `{passed, codes, issues}` · 쓰는 곳: 📱 SMS · 🧪 시험용 웹훅",
+        "width": 700.0,
+        "height": 250,
+        "color": 6
+      }
+    },
+    {
+      "id": "d93abb33-a948-5d12-b7fe-920b39d9b9b5",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -90.0,
+        130
+      ],
+      "parameters": {
+        "content": "## 📥 입력\nfacts · draft · max_length\nrequired_phrases · allowed_domains",
+        "width": 280.0,
+        "height": 350,
+        "color": 5
+      }
+    },
+    {
+      "id": "35b24ec5-1c93-5b6e-8251-b70cc02f64de",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        250.0,
+        130
+      ],
+      "parameters": {
+        "content": "## 🧮 규칙 검사\n📅 missing_fact · 📞 personal_info\n📏 too_long · 🔗 external_link",
+        "width": 280.0,
+        "height": 350,
+        "color": 1
+      }
+    },
+    {
+      "id": "195b2324-5bd4-5ad0-9808-39028d385aac",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        760
+      ],
+      "parameters": {
+        "content": "## 🔁 v1.1 = 하위 호환 변경\n사외 링크 금지를 **같은 id**에 추가\n(새 입력은 없으면 기본값 → 쓰는 곳이 안 깨짐)",
+        "width": 560,
+        "height": 200,
+        "color": 2
+      }
+    }
+  ],
+  "connections": {
+    "When called by another workflow": {
+      "main": [
+        [
+          {
+            "node": "Rule checks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

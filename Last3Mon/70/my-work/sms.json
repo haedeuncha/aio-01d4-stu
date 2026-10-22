@@ -1,0 +1,437 @@
+{
+  "name": "70-2 · 📱 Lab02 과제 · SMS (모듈 v1.1 재사용)",
+  "nodes": [
+    {
+      "name": "SMS webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "my-sms",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Has facts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c0",
+              "leftValue": "={{ $json.body.facts }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Reject empty",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        680
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"error\": \"facts are required\" }",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "name": "SMS agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=사실:\n{{ $('SMS webhook').first().json.body.facts }}",
+        "options": {
+          "systemMessage": "You write one Korean SMS (text message) from the facts only: at most 80 characters, one or two sentences. Copy every date and time exactly. No phone numbers, e-mail addresses or links. Return only the SMS text.",
+          "maxIterations": 2
+        }
+      }
+    },
+    {
+      "name": "OpenAI chat model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        540,
+        520
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "openAiCourse0001",
+          "name": "OpenAI (.env)"
+        }
+      }
+    },
+    {
+      "name": "Build draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// The writer's text, without code fences.\nreturn [{ json: { draft: String($json.output ?? '').trim().replace(/^```\\w*\\s*|```$/g, '').trim() } }];"
+      }
+    },
+    {
+      "name": "Rule check module",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        300
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "modRuleCheck01"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "facts": "={{ $('SMS webhook').first().json.body.facts }}",
+            "draft": "={{ $json.draft }}",
+            "max_length": 80,
+            "required_phrases": "={{ [] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "facts",
+              "displayName": "facts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "draft",
+              "displayName": "draft",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "max_length",
+              "displayName": "max_length",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "required_phrases",
+              "displayName": "required_phrases",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Build result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// The SMS contract: { sms, published, codes }.\nreturn [{ json: { sms: $('Build draft').first().json.draft, published: $json.passed === true, codes: $json.codes ?? [] } }];"
+      }
+    },
+    {
+      "name": "Send result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1620,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "6e83d7fe-9114-5d69-a6f8-5237a851503c",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -50,
+        -150
+      ],
+      "parameters": {
+        "content": "# ✨ 70-2 · 📱 Lab02 과제 · SMS (모듈 v1.1 재사용) ✨\n> 🧩 공지 키트와 **같은 규칙 검사 모듈**을 두 번째로 쓰는 곳 · 다른 값(80자)은 모듈 안이 아니라 **입력**으로\n\n`POST /webhook/my-sms` · 입력 `facts` · 🧪 `cases/lab02-challenge.json`",
+        "width": 1820,
+        "height": 250,
+        "color": 6
+      }
+    },
+    {
+      "id": "3329f53c-bc97-502d-83bf-aa17a7711540",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -50,
+        130
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 📥 받기\n💌 `facts`",
+        "width": 440,
+        "height": 350,
+        "color": 5
+      }
+    },
+    {
+      "id": "202cd1d5-280e-55eb-9ece-61a56cceb0a2",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        150.0,
+        510
+      ],
+      "parameters": {
+        "content": "## 🚫 빈 요청\n**400** 🙅",
+        "width": 280.0,
+        "height": 350,
+        "color": 3
+      }
+    },
+    {
+      "id": "e9e05eca-24ac-5296-92ca-1c060e71f280",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        470,
+        130
+      ],
+      "parameters": {
+        "content": "## 2️⃣ ✍️ 문자 쓰기 (LLM)\n📏 짧게 (80자)",
+        "width": 340,
+        "height": 550,
+        "color": 6
+      }
+    },
+    {
+      "id": "411052ad-85c0-5ba1-b726-141e4a622d93",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        830,
+        130
+      ],
+      "parameters": {
+        "content": "## 3️⃣ 🧩 모듈 v1.1\n→ `modRuleCheck01`\nmax_length **80** · required_phrases `[]`",
+        "width": 440,
+        "height": 350,
+        "color": 2
+      }
+    },
+    {
+      "id": "b8adbfcf-2cfc-5a32-a01d-227e25a87e29",
+      "name": "Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1330,
+        130
+      ],
+      "parameters": {
+        "content": "## 4️⃣ 🎁 결과",
+        "width": 440,
+        "height": 350,
+        "color": 4
+      }
+    },
+    {
+      "id": "40e278e2-4d0d-5190-b8cb-e3213ad0602b",
+      "name": "Note 6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        920
+      ],
+      "parameters": {
+        "content": "## 💡 왜 입력으로?\n모듈 안에 \"SMS면 80\"을 넣으면 쓰는 곳이 늘 때마다 모듈을 고쳐야 해요.\n다른 값은 **부르는 쪽이 넘기고**, 모듈은 그대로!",
+        "width": 760,
+        "height": 230,
+        "color": 1
+      }
+    },
+    {
+      "id": "64cfd9e4-0a00-51c8-bfa2-04188b9317c8",
+      "name": "Note 7",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        740,
+        920
+      ],
+      "parameters": {
+        "content": "## 🧪 확인 명령\n`uv run tools/flow.py push my-work/sms.json`\n`uv run tools/flow.py test cases/lab02-challenge.json -v`",
+        "width": 620,
+        "height": 230,
+        "color": 7
+      }
+    }
+  ],
+  "connections": {
+    "SMS webhook": {
+      "main": [
+        [
+          {
+            "node": "Has facts?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has facts?": {
+      "main": [
+        [
+          {
+            "node": "SMS agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject empty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI chat model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "SMS agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS agent": {
+      "main": [
+        [
+          {
+            "node": "Build draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build draft": {
+      "main": [
+        [
+          {
+            "node": "Rule check module",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rule check module": {
+      "main": [
+        [
+          {
+            "node": "Build result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build result": {
+      "main": [
+        [
+          {
+            "node": "Send result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
