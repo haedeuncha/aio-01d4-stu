@@ -1,7 +1,7 @@
 # 검색 평가표 · 사내 IT 규정 Q&A
 
-- 이름: 실습생
-- 사용한 CLI 에이전트: codex
+- 이름: 차해든
+- 사용한 CLI 에이전트: claude (Claude Code) · 1절 정답표 30문항 확장은 codex
 - 기준 문서: `data-api/data/docs/*.md`
 
 ## 1. 정답표
