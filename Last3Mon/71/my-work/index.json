@@ -64,7 +64,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "// 청크 나누기: chunking = \"section\"(기본) 이면 \"## \" 섹션마다, 숫자면 그 글자 수마다\nconst body = $('Index webhook').first().json.body || {};\nconst size = Number(body.chunking);\nconst bySize = Number.isFinite(size) && size > 0;\nconst chunks = [];\nfor (const item of $input.all()) {\n  const { name, title, text } = item.json;\n  if (bySize) {\n    const content = text.replace(/^# .*\\n+/, '').trim();\n    for (let i = 0, n = 1; i < content.length; i += size, n++) {\n      chunks.push({ json: { source: name, title, chunk: n, text: `${title}\\n${content.slice(i, i + size)}` } });\n    }\n  } else {\n    text.split(/\\n(?=## )/).slice(1).forEach((piece, i) => {\n      const section = piece.match(/^## (.*)/)[1].trim();\n      chunks.push({ json: { source: name, title, section, chunk: i + 1, text: `${title}\\n${piece.trim()}` } });\n    });\n  }\n}\nreturn chunks;"
+        "jsCode": "// 청크 나누기: chunking = \"section\"(기본) 이면 \"## \" 섹션마다, 숫자면 그 글자 수마다\nconst body = $('Index webhook').first().json.body || {};\nconst size = Number(body.chunking);\nconst bySize = Number.isFinite(size) && size > 0;\nconst chunks = [];\nfor (const item of $input.all()) {\n  const { name, title, text } = item.json;\n  if (bySize) {\n    const content = text.replace(/^# .*\\n+/, '').trim();\n    // overlap: 앞 조각과 겹칠 글자 수 (기본 0). 참고 워크플로우는 size/5\n    const overlap = Math.min(Math.max(Number(body.overlap) || 0, 0), size - 1);\n    for (let i = 0, n = 1; i < content.length; i += size - overlap, n++) {\n      chunks.push({ json: { source: name, title, chunk: n, text: `${title}\\n${content.slice(i, i + size)}` } });\n    }\n  } else {\n    text.split(/\\n(?=## )/).slice(1).forEach((piece, i) => {\n      const section = piece.match(/^## (.*)/)[1].trim();\n      chunks.push({ json: { source: name, title, section, chunk: i + 1, text: `${title}\\n${piece.trim()}` } });\n    });\n  }\n}\nreturn chunks;"
       }
     },
     {
@@ -150,7 +150,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "const body = $('Index webhook').first().json.body || {};\nconst size = Number(body.chunking);\nreturn [{ json: {\n  indexed_chunks: $('Make chunks').all().length,\n  chunking: Number.isFinite(size) && size > 0 ? size : 'section',\n} }];"
+        "jsCode": "const body = $('Index webhook').first().json.body || {};\nconst size = Number(body.chunking);\nreturn [{ json: {\n  indexed_chunks: $('Make chunks').all().length,\n  chunking: Number.isFinite(size) && size > 0 ? size : 'section',\n  ...(Number(body.overlap) > 0 && Number.isFinite(size) && size > 0 ? { overlap: Number(body.overlap) } : {}),\n} }];"
       }
     },
     {

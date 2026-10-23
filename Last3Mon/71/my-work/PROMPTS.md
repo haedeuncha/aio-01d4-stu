@@ -116,3 +116,13 @@ cases/my-cases.json 과 retrieval-doc · retrieval-answer · retrieval-answer3 �
 ## Lab 03 마무리
 
 - 11/12로 마무리 (가족 컴 1개 새로 틀림은 기록만). `TEST-REPORT.md` 작성, 최종 회귀 모두 `--repeat 3` 통과.
+
+## Lab 03 더 해 보기 · 겹침 (교안 3단계와 비교)
+
+```text
+my-work/index.json 의 Make chunks 에 선택 입력 overlap(앞 조각과 겹칠 글자 수, 기본 0)을 더해 줘.
+chunking 이 숫자일 때만, 다음 조각 시작 = 앞 시작 + (size - overlap). 섹션 청크와 기본 동작은 그대로.
+결과에 overlap 을 줄 때만 overlap 칸. 측정하는 동안만 검색은 다시 쓰기 전 판으로, 끝나면 되돌린다.
+```
+
+- 200+40 · 400+80이 교안 숫자(20청크 24 · 20 · 24, 12청크 22 · 22 · 24)와 틀린 질문까지 같음. 기본(겹침 0)은 바뀌지 않아 다른 테스트 그대로.
