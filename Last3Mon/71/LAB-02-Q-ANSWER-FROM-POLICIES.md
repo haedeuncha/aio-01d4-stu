@@ -37,7 +37,7 @@ flowchart LR
 `[2]`를 사람이 읽는 제목으로 바꾸는 것은 LLM이 아니라 **Code**에서. 범위 밖 번호(`[7]`)는 어떻게 할까요?
 </details>
 
-<details><summary>▶ 빈칸 채우기 · 요청문 뼈대</summary>
+<details><summary>▶ 빈칸 채우기 · 요청문(프롬프트) 뼈대</summary>
 
 요청문에 꼭 들어갈 것: **① 파일 · 웹훅 ② 어느 저장소에서 몇 개 ③ 발췌를 어떤 모양으로 ④ LLM 지시 셋(발췌로만 · 번호 · 모를 때의 문장) ⑤ 번호 → 제목 · `cited`는 어디서 ⑥ 기대 결과**. 아래 `____`를 채워 `my-work/PROMPTS.md`에 쓴 뒤 에이전트에게 보냅니다.
 
@@ -93,7 +93,7 @@ Lab 01에서 적어 둔 1등 점수들(규정 질문, 연차 질문)을 봅니�
 기준 아래면 LLM을 부르지 않고 바로 정해진 답. 빠르고, 돈이 들지 않고, 지어낼 일이 없습니다. 결과 모양(`route`, `answer`, `cited: []`)은 같게.
 </details>
 
-<details><summary>▶ 빈칸 채우기 · 요청문 뼈대</summary>
+<details><summary>▶ 빈칸 채우기 · 요청문(프롬프트) 뼈대</summary>
 
 요청문에 꼭 들어갈 것: **① 고칠 파일 ② 기준값과 그 값을 어디서 받나 ③ 무엇을 비교하나 ④ 기준 아래면 무엇을(LLM 없이) ⑤ 결과 모양은 그대로 ⑥ 기대 결과**. 아래 `____`를 채워 `my-work/PROMPTS.md`에 쓴 뒤 에이전트에게 보냅니다.
 
@@ -203,7 +203,7 @@ uv run tools/flow.py test cases/lab02-challenge.json -v
 담당자에게 넘길 때 LLM이 쓴 초안(`draft`)과 실패한 검사(`failed`)를 남기면 담당자가 빨리 판단합니다. 원래 테스트 `cases/lab02.json`도 계속 통과해야 합니다.
 </details>
 
-<details><summary>▶ 빈칸 채우기 · 요청문 뼈대</summary>
+<details><summary>▶ 빈칸 채우기 · 요청문(프롬프트) 뼈대</summary>
 
 요청문에 꼭 들어갈 것: **① 고칠 노드 ② 검사 넷의 이름과 기준 ③ 결과에 남길 칸 ④ 하나라도 실패하면 무엇을 ⑤ 원래 답은 어디에 ⑥ 두 테스트 모두 통과**. 아래 `____`를 채워 `my-work/PROMPTS.md`에 쓴 뒤 에이전트에게 보냅니다.
 
