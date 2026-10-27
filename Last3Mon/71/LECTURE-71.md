@@ -175,7 +175,7 @@ export OPENAI_API_KEY=$(grep '^OPENAI_API_KEY=' ~/aio-01d4-stu/Last3Mon/.env | c
 
 - [ ] 전날 71일차 데이터 API, `doctor` → `ready`
 - [ ] Lab 01: 정답표, `lab01`, `lab01-challenge`
-- [ ] Lab 02: `lab02`, `lab02-challenge`, `RAG-EVAL.md` 3절
+- [ ] Lab 02: `lab02`, `lab02-challenge`, `RAG-EVAL.md` 3절 · 3-1절(신뢰도 기준 충족)
 - [ ] Lab 03: doc@1 · answer@1 · answer@3, 200자 · 400자, 기준값, 개선 전·후, 보고서
 - [ ] `tdoc`: `SPEC.md` 먼저, R1~R5, `pytest`, 단계마다 commit
 - [ ] 72일차 준비
