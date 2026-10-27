@@ -24,7 +24,7 @@ flowchart LR
 | 5 | 14:00~14:50 | 3단계 강의 (검색 품질) · Lab 03 예제 1 · 2 | [3단계](../../Lecture/71/03-STAGE3-RETRIEVAL-QUALITY.md), [Lab 03](LAB-03-Q-MEASURE-AND-IMPROVE.md) | 지표 셋 · 바꾼 설정별 숫자 |
 | 6 | 15:00~15:50 | Lab 03 과제 40분 (어려운 질문으로 고치기) · 풀이 | Lab 03 | 개선 전·후 · 보고서 |
 | 7 | 16:00~16:50 | 바이브 코딩 `tdoc`: 요청서 → 내 SPEC → 만들기 | [VIBE-REQ-TDOC](VIBE-REQ-TDOC.md) → [VIBE-Q-TDOC](VIBE-Q-TDOC.md) | `SPEC.md` · R1~R5 · `pytest` |
-| 8 | 17:00~17:50 | 발표 · 강사 정리 · 강사 바이브 코딩 · 팁 · 72일차 예고 | [진행](../../Lecture/71/04-VIBE-CODING.md) | |
+| 8 | 17:00~17:50 | 발표 · 강사 정리 · 강사 바이브 코딩 · 팁 · 72일차 예고 | [진행](../../Lecture/71/05-VIBE-CODING.md) | |
 
 ## 1. 전날 준비 (약 5분)
 
