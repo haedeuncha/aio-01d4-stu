@@ -53,37 +53,34 @@ VIBE-Q의 요구 표(R1~R14)와 같습니다. 학생 SPEC과 비교할 때 자�
 
 [tcost/Doc/IMP-PLAN.md](tcost/Doc/IMP-PLAN.md) — 엔진 1단계(R1 · R2 · R3 · R13) → 엔진 2단계(R5 · R6) → TUI 1단계(R8) → 설치(R14) → 엔진 3단계(R4 · R7 · R12) → 엔진 4단계(R9 · R10 · R11).
 
-## 4. 단계별 요청문 예
+## 4. 요청문 (처음 한 번 + 다음 단계 한 줄)
 
-### 엔진 1단계
+단계마다 긴 요청문을 쓰지 않습니다. 할 일은 이미 `Doc/SPEC.md` · `Doc/IMP-PLAN.md`에 있으니, 에이전트가 그 파일을 읽게 하면 됩니다.
+
+### 처음 한 번
 
 ```text
-Doc/SPEC.md 와 Doc/IMP-PLAN.md 를 읽고 "엔진 1단계"만 만들어 줘. uv 프로젝트, 명령 이름 tcost, 코드와 화면 글자는 영어.
-- prices.json: {"checked": "2026-10-28", "source": ..., "models": {"gpt-4.1-mini": {"input": 0.40, "output": 1.60}, "gpt-5.4-nano": {"input": 0.20, "output": 1.25}}}
-  패키지 안에 두고 --prices 로 바꿀 수 있게. cost(model, in, out) = (in × input + out × output) / 1,000,000, 소수 8자리.
-  warning(today): checked 가 30일 넘었거나 없으면 알림 글.
-- tokens.count(text): tiktoken o200k_base. API 는 부르지 않는다.
-- tcost count <파일> [--out N] [--model M]: 파일마다 토큰과 모델마다 한 번 · 1,000번 비용 표.
-- tests: 1,000토큰 mini → 0.0004, --out 100 → 0.00056, checked + 45일 → 알림. 네트워크 없이.
-끝나면 IMP-PLAN 체크를 표시하고 확인 명령을 알려 줘.
+Doc/SPEC.md 와 Doc/IMP-PLAN.md 를 읽고 체크 안 된 첫 단계만 만들어 줘. uv 프로젝트, 명령 이름 tcost, 코드와 화면 글자는 영어.
+끝나면 IMP-PLAN 체크를 표시하고 확인 명령을 알려 줘. 다음 단계는 내가 말할 때까지 하지 마.
 ```
 
-### 엔진 2단계
+### 그다음 단계마다 (같은 한 줄)
 
 ```text
-엔진 2단계만: usage.collect(paths) 가 flow.py 테스트 보고서(runs/*.json, results[].request · response)를 읽어
-response.usage.by_step 이 있는 결과만 요청 하나로 세고, 단계마다 호출 하나로 토큰 · cost_usd 를 모델별 · 사람별(request.user) · 시간대별(파일 이름 -YYYYMMDD-HHMMSS 의 HH) 로 더해 줘.
-usage 가 없는 결과는 skipped 로 센다. avg = 비용 ÷ 요청 수, month(per_day, days) = avg × per_day × days (소수 6자리).
-tcost usage <폴더> [--per-day N --days 22]. tests: 결과 셋 중 400 하나 → 요청 2 · skipped 1, 사람별 합, 한 달.
+확인했고 commit 했어. 다음 단계.
 ```
 
-### TUI 1단계
+- 그냥 "계속"만 치면 단계 두세 개를 한꺼번에 하거나 체크 · 확인 명령을 빼먹기 쉽습니다. 이 한 줄은 처음 요청의 약속(한 단계만 · 체크 · 확인 명령 · 멈춤)을 이어 가게 합니다.
+- 대화가 길어지면 새 세션에서 **처음 요청**을 다시 보냅니다. "체크 안 된 첫 단계"부터 이어집니다.
+- 에이전트가 단계 내용을 잘못 알았다면, 요청문을 길게 쓰기보다 **SPEC · IMP-PLAN을 고치고** 다시 시킵니다.
+
+### 틀렸을 때만 · 고쳐 달라는 요청문 예
+
+무엇이 틀렸나(보인 것) · SPEC의 어느 요구인가 · 어디만 고치나 · 무엇으로 확인하나, 넷을 적습니다.
 
 ```text
-TUI 1단계만: tcost <폴더> [폴더 …] 이면 Textual 화면. TabbedContent 탭 셋:
-Prompts(글 파일 · 워크플로우 LLM 단계마다 토큰과 모델마다 1,000번 비용 DataTable), Usage(보고서 합 · 모델별 · 사람별 표, 시간대별 막대 ▁▂▃▄▅▆▇█),
-Compare(토큰이 많은 지시문 열 개, 모델마다 출력 100 가정 한 번 비용). [r] 다시 읽기, [q] 끝.
-엔진은 고치지 말고 불러 쓰기만. pytest run_test 로 세 탭이 채워지는지.
+tcost count 에 --out 100 을 줘도 출력 토큰 비용이 더해지지 않아. SPEC R2 대로 출력 N토큰 × output 단가를 더해야 해.
+prices.py 의 cost 만 고치고, tests 에 1,000토큰 · --out 100 · mini → 0.00056 을 넣어 확인해 줘. 다른 파일은 건드리지 마.
 ```
 
 ## 5. 결과 확인 (강사 본, 2026-10-28)
