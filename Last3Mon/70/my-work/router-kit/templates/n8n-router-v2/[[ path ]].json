@@ -1,0 +1,808 @@
+{
+  "name": "[[ name ]]",
+  "nodes": [
+    {
+      "name": "Router webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "[[ path ]]",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Has message and user?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ ['message', 'user'].every(k => typeof $json.body?.[k] === 'string' && $json.body[k].trim() !== '') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Reject empty",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        520
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"error\": \"message and user are required\", \"hint\": \"예: {\\\"message\\\": \\\"...\\\", \\\"user\\\": \\\"박서연\\\"}\"}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "name": "Lane settings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// 갈래 설정 표: 새 업무 종류는 여기에 한 줄 (Agent 주소 · 보낼 본문 · 꼭 필요한 칸 · 빠졌을 때 물을 말)\nconst LANES = [[ lanes ]];\n// 요청 전체에서 한 번 뽑아 모든 업무에 붙이는 칸\nconst SHARED = [[ shared ]];\nreturn [{ json: { lanes: LANES, shared: SHARED } }];"
+      }
+    },
+    {
+      "name": "Split tasks",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=오늘: {{ $now.setZone('Asia/Seoul').toFormat('yyyy-MM-dd') }} ({{ ['월','화','수','목','금','토','일'][$now.setZone('Asia/Seoul').weekday - 1] }}요일)\n요청한 사람: {{ $('Router webhook').first().json.body.user }}\n요청: {{ $('Router webhook').first().json.body.message }}",
+        "options": {
+          "systemMessage": "[[ split_prompt ]]",
+          "maxIterations": 2
+        }
+      }
+    },
+    {
+      "name": "OpenAI chat model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        620,
+        520
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "openAiCourse0001",
+          "name": "OpenAI (.env)"
+        }
+      }
+    },
+    {
+      "name": "Parse tasks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const body = $('Router webhook').first().json.body;\nconst user = String(body.user).trim();\nconst { lanes: LANES, shared: SHARED } = $('Lane settings').first().json;\nconst today = $now.setZone('Asia/Seoul').toFormat('yyyy-MM-dd');\nconst isDate = s => typeof s === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(s) && !isNaN(Date.parse(s + 'T00:00:00Z')) && new Date(s + 'T00:00:00Z').toISOString().slice(0, 10) === s;\n// LLM이 날짜를 지어내지 않았는지: 요청 문장에 날짜를 말하는 표현이 있어야 날짜를 믿는다\nconst mentionsDate = text => /\\d{1,2}\\s*월|\\d{1,2}\\s*일|\\d{4}-\\d{1,2}-\\d{1,2}|\\d{1,2}\\/\\d{1,2}|오늘|내일|모레|글피|요일|이번\\s*주|다음\\s*주|주말|월말|월초/.test(String(text ?? ''));\nfunction parseJson(output) {\n  const raw = String(output ?? '');\n  const start = raw.indexOf('{');\n  const end = raw.lastIndexOf('}');\n  if (start < 0 || end < start) throw new Error('no JSON');\n  return JSON.parse(raw.slice(start, end + 1));\n}\nconst DATE_FIELDS = ['start', 'end', 'date'];\nconst said = mentionsDate(body.message);\nconst clean = (key, value) => {\n  const text = typeof value === 'string' ? value.trim() : (value ?? '');\n  if (DATE_FIELDS.includes(key)) return said && isDate(text) ? text : '';  // 날짜는 요청에 날짜 표현이 있을 때만\n  return text;\n};\n// 갈래 설정의 body: \"Agent가 받는 이름\" → \"user\" | \"text\" | 칸 이름 | \"a|b\"(앞이 비면 뒤) | \"body.칸\"(웹훅 입력) | \"{칸} 글자\"(끼워 넣기)\nconst pick = (spec, task) => {\n  if (spec.includes('{')) return spec.replace(/\\{(\\w+)\\}/g, (_, key) => task.fields[key] ?? '').trim();\n  for (const name of spec.split('|')) {\n    const value = name === 'user' ? user : name === 'text' ? task.text : name.startsWith('body.') ? body[name.slice(5)] : task.fields[name];\n    if (value !== undefined && value !== '') return value;\n  }\n  return '';\n};\ntry {\n  const parsed = parseJson($json.output);\n  if (!Array.isArray(parsed.tasks)) throw new Error('no tasks');\n  const shared = {};\n  for (const key of SHARED) shared[key] = clean(key, (parsed.shared || {})[key]);\n  const tasks = parsed.tasks\n    .filter(t => t && typeof t.text === 'string' && t.text.trim())\n    .map(t => {\n      const lane = LANES[t.type];\n      const type = lane ? t.type : 'other';\n      const fields = { ...shared };\n      for (const [key, value] of Object.entries(t)) if (!['type', 'text'].includes(key)) fields[key] = clean(key, value);\n      const task = { type, text: t.text.trim(), fields, agent: lane ? lane.agent : '담당자 연결', missing: [], ask: '' };\n      if (!lane) return { ...task, lane: 'other' };\n      task.missing = (lane.required || []).filter(key => !fields[key]);\n      if (task.missing.length) return { ...task, lane: 'needs input', ask: lane.ask || `${task.missing.join(', ')}을(를) 알려 주세요.` };\n      task.request = Object.fromEntries(Object.entries(lane.body).map(([key, spec]) => [key, pick(spec, task)]));\n      return { ...task, lane: 'agent' };\n    });\n  return [{ json: { count: tasks.length, tasks } }];\n} catch (error) {\n  return [{ json: { count: 0, tasks: [], error: 'split_failed' } }];\n}"
+      }
+    },
+    {
+      "name": "Has tasks?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.count > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Send no tasks",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1420,
+        520
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { count: 0, results: [], reply: '요청에서 처리할 일을 찾지 못했어요. 무엇을 도와드릴지 한 문장으로 다시 알려 주세요.' } }}",
+        "options": {}
+      }
+    },
+    {
+      "name": "One item per task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1420,
+        300
+      ],
+      "parameters": {
+        "jsCode": "return $json.tasks.map((task, index) => ({ json: { ...task, index: index + 1 } }));"
+      }
+    },
+    {
+      "name": "Route by lane",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1640,
+        300
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r-agent",
+                    "leftValue": "={{ $json.lane }}",
+                    "rightValue": "agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "agent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r-other",
+                    "leftValue": "={{ $json.lane }}",
+                    "rightValue": "other",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "other"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r-needs-input",
+                    "leftValue": "={{ $json.lane }}",
+                    "rightValue": "needs input",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "needs input"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Call agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1880,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=http://localhost:5678/webhook/{{ $json.agent }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.request) }}",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Agent result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2120,
+        100
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0",
+              "name": "index",
+              "value": "={{ $('Route by lane').item.json.index }}",
+              "type": "number"
+            },
+            {
+              "id": "a1",
+              "name": "type",
+              "value": "={{ $('Route by lane').item.json.type }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "text",
+              "value": "={{ $('Route by lane').item.json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "agent",
+              "value": "={{ $('Route by lane').item.json.agent }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "route",
+              "value": "={{ $json.route || '담당자 연결' }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "answer",
+              "value": "={{ $json.answer || '담당 Agent가 응답하지 않아 담당자에게 전달했습니다. 잠시 뒤 다시 시도해 주세요.' }}",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "detail",
+              "value": "={{ Object.fromEntries(Object.entries($json).filter(([key]) => !['route', 'answer', 'user', 'error'].includes(key))) }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Other result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2120,
+        300
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0",
+              "name": "index",
+              "value": "={{ $('Route by lane').item.json.index }}",
+              "type": "number"
+            },
+            {
+              "id": "a1",
+              "name": "type",
+              "value": "={{ $('Route by lane').item.json.type }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "text",
+              "value": "={{ $('Route by lane').item.json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "agent",
+              "value": "담당자 연결",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "route",
+              "value": "담당자 연결",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "answer",
+              "value": "[[ other_answer ]]",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "detail",
+              "value": "={{ {} }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Need input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2120,
+        500
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0",
+              "name": "index",
+              "value": "={{ $('Route by lane').item.json.index }}",
+              "type": "number"
+            },
+            {
+              "id": "a1",
+              "name": "type",
+              "value": "={{ $('Route by lane').item.json.type }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "text",
+              "value": "={{ $('Route by lane').item.json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "agent",
+              "value": "={{ $json.agent }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "route",
+              "value": "입력 필요",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "answer",
+              "value": "={{ $json.ask }}",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "detail",
+              "value": "={{ { missing: $json.missing } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Collect results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2360,
+        300
+      ],
+      "parameters": {
+        "numberInputs": 3
+      }
+    },
+    {
+      "name": "All results",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2580,
+        300
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "results",
+        "options": {}
+      }
+    },
+    {
+      "name": "Build reply",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2800,
+        300
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "modBuildReply02"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user": "={{ $('Router webhook').first().json.body.user.trim() }}",
+            "results": "={{ $json.results }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user",
+              "displayName": "user",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "results",
+              "displayName": "results",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Send result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3020,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    },
+    {
+      "name": "Note title",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -260
+      ],
+      "parameters": {
+        "content": "# 🧭 [[ name ]]\n`POST /webhook/[[ path ]]` · 입력 `message`, `user` · 결과 `{count, summary, results[], reply}`\nrouter-kit 템플릿 v2 (B안): 업무 종류는 **`Lane settings` 표 한 줄**, 답장은 모듈 `modBuildReply02` (첫 줄 처리 요약 · `summary`)",
+        "width": 3180,
+        "height": 170,
+        "color": 6
+      }
+    },
+    {
+      "name": "Note steps",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        640
+      ],
+      "parameters": {
+        "content": "## 순서\n1️⃣ 받기 → 2️⃣ 갈래 설정 표 → 3️⃣ 업무 나누기 (LLM) → 4️⃣ 검사 (Code: 날짜 · 꼭 필요한 칸 · 본문 만들기)\n→ 5️⃣ agent / other / needs input → 6️⃣ 표의 주소로 Agent 호출 → 7️⃣ 모아서 🧩 답장 모듈",
+        "width": 1500,
+        "height": 160,
+        "color": 7
+      }
+    }
+  ],
+  "connections": {
+    "Router webhook": {
+      "main": [
+        [
+          {
+            "node": "Has message and user?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lane settings": {
+      "main": [
+        [
+          {
+            "node": "Split tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split tasks": {
+      "main": [
+        [
+          {
+            "node": "Parse tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse tasks": {
+      "main": [
+        [
+          {
+            "node": "Has tasks?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One item per task": {
+      "main": [
+        [
+          {
+            "node": "Route by lane",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call agent": {
+      "main": [
+        [
+          {
+            "node": "Agent result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect results": {
+      "main": [
+        [
+          {
+            "node": "All results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All results": {
+      "main": [
+        [
+          {
+            "node": "Build reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build reply": {
+      "main": [
+        [
+          {
+            "node": "Send result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has message and user?": {
+      "main": [
+        [
+          {
+            "node": "Lane settings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject empty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has tasks?": {
+      "main": [
+        [
+          {
+            "node": "One item per task",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send no tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by lane": {
+      "main": [
+        [
+          {
+            "node": "Call agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Other result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Need input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent result": {
+      "main": [
+        [
+          {
+            "node": "Collect results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Other result": {
+      "main": [
+        [
+          {
+            "node": "Collect results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Need input": {
+      "main": [
+        [
+          {
+            "node": "Collect results",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "OpenAI chat model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Split tasks",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,182 @@
+{
+  "webhook": "a3-hr-balance",
+  "cases": [
+    {
+      "name": "연차 · 본인 조회",
+      "body": {
+        "user": "박서연"
+      },
+      "expect": {
+        "equals": {
+          "route": "자동 답변",
+          "remaining": 9
+        }
+      },
+      "webhook": "a3-hr-balance"
+    },
+    {
+      "name": "연차 · 남의 연차 숨김",
+      "body": {
+        "user": "박서연",
+        "target": "이준호"
+      },
+      "expect": {
+        "equals": {
+          "route": "담당자 연결",
+          "remaining": null
+        },
+        "not_contains": {
+          "answer": [
+            "0.5",
+            "14.5"
+          ]
+        }
+      },
+      "webhook": "a3-hr-balance"
+    },
+    {
+      "name": "연차 · user 없음 400",
+      "body": {
+        "target": "이준호"
+      },
+      "expect": {
+        "status": 400
+      },
+      "webhook": "a3-hr-balance"
+    },
+    {
+      "name": "휴가 · 접수",
+      "body": {
+        "user": "박서연",
+        "start": "2026-11-06",
+        "kind": "연차"
+      },
+      "expect": {
+        "equals": {
+          "route": "접수 완료",
+          "days": 1,
+          "remaining_after": 8
+        }
+      },
+      "webhook": "a3-hr-leave"
+    },
+    {
+      "name": "휴가 · 잔여 부족 거절",
+      "body": {
+        "user": "이준호",
+        "start": "2026-11-10",
+        "end": "2026-11-11"
+      },
+      "expect": {
+        "equals": {
+          "route": "거절"
+        },
+        "contains": {
+          "answer": [
+            "0.5"
+          ]
+        }
+      },
+      "webhook": "a3-hr-leave"
+    },
+    {
+      "name": "휴가 · 오후 반차 접수",
+      "body": {
+        "user": "이준호",
+        "start": "2026-11-10",
+        "kind": "반차",
+        "half": "오후"
+      },
+      "expect": {
+        "equals": {
+          "route": "접수 완료",
+          "days": 0.5,
+          "remaining_after": 0
+        }
+      },
+      "webhook": "a3-hr-leave"
+    },
+    {
+      "name": "휴가 · 3일 전 규칙",
+      "body": {
+        "user": "김민지",
+        "start": "2026-10-21"
+      },
+      "expect": {
+        "equals": {
+          "route": "거절"
+        },
+        "contains": {
+          "answer": [
+            "HR-1"
+          ]
+        }
+      },
+      "webhook": "a3-hr-leave"
+    },
+    {
+      "name": "휴가 · 주말",
+      "body": {
+        "user": "김민지",
+        "start": "2026-11-07"
+      },
+      "expect": {
+        "equals": {
+          "route": "거절"
+        },
+        "contains": {
+          "answer": [
+            "주말"
+          ]
+        }
+      },
+      "webhook": "a3-hr-leave"
+    },
+    {
+      "name": "휴가 · 날짜 없음",
+      "body": {
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "route": "입력 필요"
+        }
+      },
+      "webhook": "a3-hr-leave"
+    },
+    {
+      "name": "HR 규정 · 병가 진단서",
+      "body": {
+        "question": "병가 쓰려면 진단서 필요해?",
+        "user": "박서연"
+      },
+      "expect": {
+        "equals": {
+          "route": "자동 답변"
+        },
+        "contains": {
+          "answer": [
+            "진단서"
+          ],
+          "sources": [
+            "HR-3"
+          ]
+        }
+      },
+      "webhook": "a3-hr-policy"
+    },
+    {
+      "name": "HR 규정 · 규정에 없음",
+      "body": {
+        "question": "육아휴직 몇 년까지 돼?",
+        "user": "박서연"
+      },
+      "expect": {
+        "equals": {
+          "route": "담당자 연결"
+        }
+      },
+      "webhook": "a3-hr-policy"
+    }
+  ]
+}

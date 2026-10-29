@@ -1,0 +1,108 @@
+{
+  "webhook": "a3-hr",
+  "cases": [
+    {
+      "name": "복합 3개 · 조회·신청·규정",
+      "body": {
+        "message": "연차 몇 개 남았는지 알려 주고, 11월 6일 금요일에 연차 쓸게. 그리고 병가 쓰려면 진단서 필요해?",
+        "user": "박서연"
+      },
+      "expect": {
+        "equals": {
+          "count": 3,
+          "results.0.agent": "a3-hr-balance",
+          "results.1.route": "접수 완료",
+          "results.2.agent": "a3-hr-policy"
+        },
+        "contains": {
+          "results.0.answer": [
+            "9일"
+          ],
+          "results.2.answer": [
+            "진단서"
+          ]
+        }
+      }
+    },
+    {
+      "name": "남의 연차 숨김",
+      "body": {
+        "message": "이준호 연차 몇 개 남았어?",
+        "user": "박서연"
+      },
+      "expect": {
+        "equals": {
+          "count": 1,
+          "results.0.route": "담당자 연결"
+        },
+        "not_contains": {
+          "reply": [
+            "0.5일",
+            "14.5"
+          ]
+        }
+      }
+    },
+    {
+      "name": "잔여 부족 거절",
+      "body": {
+        "message": "11월 10일부터 11일까지 연차 쓸게요",
+        "user": "이준호"
+      },
+      "expect": {
+        "equals": {
+          "results.0.route": "거절"
+        }
+      }
+    },
+    {
+      "name": "날짜 없음 · 입력 필요",
+      "body": {
+        "message": "휴가 쓸게요",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "count": 1,
+          "results.0.route": "입력 필요"
+        }
+      }
+    },
+    {
+      "name": "범위 밖 · 담당자 연결",
+      "body": {
+        "message": "월급 언제 들어와?",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "count": 1,
+          "results.0.route": "담당자 연결",
+          "results.0.agent": "담당자 연결"
+        }
+      }
+    },
+    {
+      "name": "빈 요청 · 400",
+      "body": {
+        "message": "",
+        "user": "김민지"
+      },
+      "expect": {
+        "status": 400
+      }
+    },
+    {
+      "name": "규정에 없는 질문",
+      "body": {
+        "message": "육아휴직 몇 년까지 돼?",
+        "user": "박서연"
+      },
+      "expect": {
+        "equals": {
+          "results.0.route": "담당자 연결"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,236 @@
+{
+  "name": "auto3 · HR 휴가 신청 Agent",
+  "nodes": [
+    {
+      "name": "Leave webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        65,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "a3-hr-leave",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Has user?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        495,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ ['user'].every(k => typeof $json.body?.[k] === 'string' && $json.body[k].trim() !== '') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Reject missing",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        495,
+        520
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"error\": \"user is required\", \"hint\": \"예: {\\\"user\\\": \\\"박서연\\\", \\\"start\\\": \\\"2026-11-06\\\"}\"}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "name": "Check and accept",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        925,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const body = $('Leave webhook').first().json.body;\nconst today = $now.setZone('Asia/Seoul').toFormat('yyyy-MM-dd');\nconst isDate = s => typeof s === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(s) && !isNaN(Date.parse(s + 'T00:00:00Z')) && new Date(s + 'T00:00:00Z').toISOString().slice(0, 10) === s;\nconst dayKo = s => '일월화수목금토'[new Date(s + 'T00:00:00Z').getUTCDay()];\nconst addDays = (s, n) => new Date(Date.parse(s + 'T00:00:00Z') + n * 86400000).toISOString().slice(0, 10);\nconst daysBetween = (a, b) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / 86400000);\n// LLM이 날짜를 지어내지 않았는지: 요청 문장에 날짜를 말하는 표현이 있어야 날짜를 믿는다\nconst mentionsDate = text => /\\d{1,2}\\s*월|\\d{1,2}\\s*일|\\d{4}-\\d{1,2}-\\d{1,2}|\\d{1,2}\\/\\d{1,2}|오늘|내일|모레|글피|요일|이번\\s*주|다음\\s*주|주말|월말|월초/.test(String(text ?? ''));\nconst range = (a, b) => (!b || a === b) ? `${a}(${dayKo(a)})` : `${a}(${dayKo(a)}) ~ ${b}(${dayKo(b)})`;\nconst won = n => Math.round(n).toString().replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',') + '원';\nconst hash = s => { let h = 5381; for (const c of s) h = ((h * 33) ^ c.codePointAt(0)) >>> 0; return h.toString(36).toUpperCase().slice(-4).padStart(4, '0'); };\n// 연습용 가짜 인사 데이터 (2026년)\nconst LEAVE = { '박서연': { total: 15, used: 6 }, '이준호': { total: 15, used: 14.5 }, '김민지': { total: 20, used: 3 } };\nconst user = String(body.user).trim();\nconst kind = String(body.kind ?? '').includes('반차') ? '반차' : '연차';\nconst half = ['오전', '오후'].includes(String(body.half ?? '').trim()) ? String(body.half).trim() : '';\nconst start = String(body.start ?? '').trim();\nlet end = String(body.end ?? '').trim() || start;\nif (kind === '반차') end = start;\nconst out = (route, answer, extra = {}) => [{ json: { route, answer, user, kind, ...extra } }];\nif (!isDate(start) || !isDate(end)) return out('입력 필요', '휴가 날짜를 알려 주세요. 예: \"11월 6일 연차\", \"11월 10일부터 11일까지 연차\", \"11월 6일 오후 반차\"');\nif (end < start) return out('입력 필요', `끝 날짜(${end})가 시작 날짜(${start})보다 빠릅니다.`);\nif (daysBetween(start, end) > 30) return out('담당자 연결', '30일이 넘는 휴가는 인사팀과 직접 상의해 주세요.');\nlet days = 0;\nfor (let d = start; d <= end; d = addDays(d, 1)) { const w = new Date(d + 'T00:00:00Z').getUTCDay(); if (w !== 0 && w !== 6) days += 1; }\nif (days === 0) return out('거절', `${range(start, end)}은 주말이라 연차를 쓰지 않아도 됩니다.`);\nif (kind === '반차') days = 0.5;\nconst lead = daysBetween(today, start);\nif (lead < 3) return out('거절', `연차는 사용일 3일 전까지 신청해야 해요 (HR-1). ${range(start)}은 오늘(${range(today)})로부터 ${lead}일 ${lead < 0 ? '지난 날' : '뒤'}라 접수하지 못했습니다. 급한 일이면 팀장에게 직접 말씀해 주세요.`);\nconst row = LEAVE[user];\nif (!row) return out('담당자 연결', `${user} 님의 연차 기록을 찾지 못해 인사팀에 연결했습니다.`);\nconst remaining = row.total - row.used;\nif (days > remaining) return out('거절', `남은 연차가 ${remaining}일이라 ${days}일을 신청할 수 없어요. 날짜를 줄이거나 반차로 바꿔 다시 신청해 주세요.`, { days, remaining });\nconst label = kind === '반차' ? `${half ? half + ' ' : ''}반차` : '연차';\nconst request_id = `L-${start.replace(/-/g, '')}-${hash(user + kind + half + end)}`;\nreturn out('접수 완료', `${range(start, end)} ${label} ${days}일 신청을 접수했습니다 (접수 번호 ${request_id}). 팀장 승인 후 확정되며, 승인되면 남은 연차는 ${remaining - days}일이에요.`,\n  { request_id, start, end, half, days, remaining_after: remaining - days });"
+      }
+    },
+    {
+      "name": "Send result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1355,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "67505428-63d7-5fe9-94f2-594d4211ce3f",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -110
+      ],
+      "parameters": {
+        "content": "# ✨ 🏖️ auto3 · HR 휴가 신청 ✨\n`POST /webhook/a3-hr-leave` · `user`, `start`, `end`, `kind`(연차·반차), `half`\n규칙: 주말 제외 · 3일 전까지(HR-1) · 남은 연차 넘으면 거절",
+        "width": 1640,
+        "height": 190,
+        "color": 4
+      }
+    },
+    {
+      "id": "7af55686-5ab1-5437-bc0e-075ae025692c",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        110
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 📥 받기 · 입력 확인\n- `Leave webhook`\n- `Has user?`\n- `Reject missing`",
+        "width": 810.0,
+        "height": 600,
+        "color": 5
+      }
+    },
+    {
+      "id": "39f3ac5d-f7c8-5778-81bb-14125d84e060",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        770.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 2️⃣ 🧮 Code로 처리 · 검사\n- `Check and accept`",
+        "width": 410.0,
+        "height": 600,
+        "color": 1
+      }
+    },
+    {
+      "id": "81ea3e6f-abcd-5835-8b72-cef12f7e21c1",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1200.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 3️⃣ 📤 답장\n- `Send result`",
+        "width": 380.0,
+        "height": 600,
+        "color": 4
+      }
+    },
+    {
+      "id": "602cdfe5-3f93-518e-b597-44dcfddca8fd",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        770
+      ],
+      "parameters": {
+        "content": "## ▶ 실행해 보기\n이 워크플로우는 **게시(Published)** 되어 있어서 아래 주소로 바로 부를 수 있어요. 터미널은 `Last3Mon/68` 폴더에서.\n\n**① 요청 하나 보내기 (JSON 그대로)**\n```\nuv run tools/flow.py call a3-hr-leave '{\"user\": \"박서연\", \"start\": \"2026-11-06\"}'\n```\n**② 결과 보기**: 화면 위 **Executions** 탭 → 맨 위 실행 → 노드를 눌러 들어온 값 · 나간 값 확인",
+        "width": 1000,
+        "height": 330,
+        "color": 7
+      }
+    },
+    {
+      "id": "4c8921a9-142a-5e6d-bb9d-69a2037ae501",
+      "name": "Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        980,
+        770
+      ],
+      "parameters": {
+        "content": "## 💡 이 Agent는 혼자 쓰기보다\n라우터 **`a3-hr`** 가 HTTP로 부릅니다.\n직원 요청 한 문장은 라우터에 보내세요.",
+        "width": 640,
+        "height": 170,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Leave webhook": {
+      "main": [
+        [
+          {
+            "node": "Has user?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has user?": {
+      "main": [
+        [
+          {
+            "node": "Check and accept",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check and accept": {
+      "main": [
+        [
+          {
+            "node": "Send result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "webhook": "my-helpdesk",
+  "cases": [
+    {
+      "name": "VPN 해결 방법",
+      "request": "requests/faq-vpn.json",
+      "expect": {
+        "status": 200,
+        "equals": {"route": "자동 답변"},
+        "contains": {"answer": ["인증서"]}
+      }
+    },
+    {
+      "name": "비밀번호 해결 방법",
+      "request": "requests/faq-password.json",
+      "expect": {
+        "status": 200,
+        "contains": {"answer": ["휴대폰 인증"]}
+      }
+    },
+    {
+      "name": "프린터 해결 방법",
+      "request": "requests/faq-printer.json",
+      "expect": {
+        "status": 200,
+        "contains": {"answer": ["인쇄 대기열"]}
+      }
+    },
+    {
+      "name": "메일함 해결 방법",
+      "request": "requests/faq-mail.json",
+      "expect": {
+        "status": 200,
+        "contains": {"answer": ["첨부 파일"]}
+      }
+    },
+    {
+      "name": "완료 티켓 해결 내용",
+      "request": "requests/ticket-done.json",
+      "expect": {
+        "status": 200,
+        "contains": {"answer": ["배터리"]}
+      }
+    },
+    {
+      "name": "소프트웨어 해결 방법",
+      "body": {
+        "question": "프로그램 설치는 어떻게 신청하나요?",
+        "user": "한지훈"
+      },
+      "expect": {
+        "status": 200,
+        "contains": {"answer": ["설치"]}
+      }
+    },
+    {
+      "name": "접수 상태",
+      "request": "requests/ticket-own.json",
+      "expect": {
+        "status": 200,
+        "contains": {"answer": ["처리 중"]}
+      }
+    },
+    {
+      "name": "완료 예정일",
+      "request": "requests/ticket-own.json",
+      "expect": {
+        "status": 200,
+        "contains": {"answer": ["10월 20일"]}
+      }
+    },
+    {
+      "name": "포털 떠넘기기 금지",
+      "request": "requests/faq-printer.json",
+      "expect": {
+        "status": 200,
+        "not_contains": {"answer": ["IT 포털", "포털을 확인"]}
+      }
+    }
+  ]
+}
