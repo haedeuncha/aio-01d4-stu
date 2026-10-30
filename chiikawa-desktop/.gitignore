@@ -1,0 +1,11 @@
+node_modules/
+.npm-cache/
+.electron-cache/
+.runtime/
+dist/
+dist-electron/
+*.log
+*.tmp
+*.temp
+*.part
+*.crdownload
