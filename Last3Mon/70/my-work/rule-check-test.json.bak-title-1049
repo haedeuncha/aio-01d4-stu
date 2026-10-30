@@ -1,0 +1,207 @@
+{
+  "name": "70-5 · 🧪 시험 · 모듈 v1.1 (my-rule-check)",
+  "nodes": [
+    {
+      "name": "Test webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "my-rule-check",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Rule check module",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        340,
+        300
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "modRuleCheck01"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "facts": "={{ $json.body.facts }}",
+            "draft": "={{ $json.body.draft }}",
+            "max_length": "={{ $json.body.max_length ?? 600 }}",
+            "required_phrases": "={{ $json.body.required_phrases ?? [] }}",
+            "allowed_domains": "={{ $json.body.allowed_domains ?? [] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "facts",
+              "displayName": "facts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "draft",
+              "displayName": "draft",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "max_length",
+              "displayName": "max_length",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "required_phrases",
+              "displayName": "required_phrases",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "allowed_domains",
+              "displayName": "allowed_domains",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Send result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "e18cbaec-8516-5c43-9b62-0926b1b9e901",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -90.0,
+        -150
+      ],
+      "parameters": {
+        "content": "# 🧪 70 시험용 · 모듈 v1.1\n> 웹훅으로 모듈만 따로 시험 (LLM 없음, 0.1초)\n\n`POST /webhook/my-rule-check` · 🧪 `lab02-module` · `lab03`",
+        "width": 960.0,
+        "height": 250,
+        "color": 6
+      }
+    },
+    {
+      "id": "923221d5-7b9f-5fc9-b817-1ae1f95bdd46",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -90.0,
+        130
+      ],
+      "parameters": {
+        "content": "## 📥 시험 입구",
+        "width": 280.0,
+        "height": 350,
+        "color": 5
+      }
+    },
+    {
+      "id": "2aafa884-a972-5c72-b932-a29a6e2ae736",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        250.0,
+        130
+      ],
+      "parameters": {
+        "content": "## 🧩 모듈 v1.1\nmodRuleCheck01",
+        "width": 280.0,
+        "height": 350,
+        "color": 2
+      }
+    },
+    {
+      "id": "7d9b3720-43a0-5aab-b1f5-167859064746",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        590.0,
+        130
+      ],
+      "parameters": {
+        "content": "## 📤 결과",
+        "width": 280.0,
+        "height": 350,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Test webhook": {
+      "main": [
+        [
+          {
+            "node": "Rule check module",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rule check module": {
+      "main": [
+        [
+          {
+            "node": "Send result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

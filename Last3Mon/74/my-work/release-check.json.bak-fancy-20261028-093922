@@ -1,0 +1,149 @@
+{
+  "name": "74 IT helpdesk release check (my)",
+  "nodes": [
+    {
+      "name": "Release check webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "my-release-check",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Has release?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [220, 300],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2},
+          "conditions": [{"id": "c1", "leftValue": "={{ $json.body.release }}", "rightValue": "", "operator": {"type": "string", "operation": "notEmpty", "singleValue": true}}],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Reject missing release",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [440, 560],
+      "parameters": {"respondWith": "json", "responseBody": "{ \"error\": \"release is required\" }", "options": {"responseCode": 400}}
+    },
+    {
+      "name": "Get release",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300],
+      "parameters": {"url": "http://data-api:8800/releases/helpdesk", "options": {}}
+    },
+    {
+      "name": "Pick release",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 300],
+      "parameters": {
+        "jsCode": "const requested = String($('Release check webhook').first().json.body.release ?? '');\nconst info = $json.releases?.[requested];\nif (!info) return [{ json: { ok: false, release: requested, known: Object.keys($json.releases ?? {}) } }];\nreturn [{ json: { ok: true, release: requested } }];"
+      }
+    },
+    {
+      "name": "Known release?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [880, 300],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2},
+          "conditions": [{"id": "c1", "leftValue": "={{ $json.ok }}", "rightValue": "", "operator": {"type": "boolean", "operation": "true", "singleValue": true}}],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Reject unknown release",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1100, 560],
+      "parameters": {"respondWith": "json", "responseBody": "={{ JSON.stringify({ error: 'unknown release', release: $json.release, known: $json.known }) }}", "options": {"responseCode": 400}}
+    },
+    {
+      "name": "Golden questions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 300],
+      "parameters": {
+        "jsCode": "const release = $('Pick release').first().json.release;\nreturn [\n  { json: { question: 'VPN 접속이 자꾸 끊겨요. 어떻게 하나요?', user: '이준호', release } },\n  { json: { question: '비밀번호를 잊어버렸어요. 재설정은 어떻게 하나요?', user: '한지훈', release } },\n  { json: { question: '프린터 출력이 안 돼요', user: '최유진', release } },\n  { json: { question: '메일함 용량이 꽉 찼대요', user: '김민지', release } },\n  { json: { question: 'T-1002 처리 상태 알려 주세요', user: '박서연', release } },\n  { json: { question: 'T-1001 어떻게 됐나요?', user: '이준호', release } }\n];"
+      }
+    },
+    {
+      "name": "Ask helpdesk",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/my-helpdesk",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ question: $json.question, user: $json.user, release: $json.release }) }}",
+        "options": {"timeout": 30000, "response": {"response": {"neverError": true, "fullResponse": true}}}
+      }
+    },
+    {
+      "name": "Judge",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 300],
+      "parameters": {
+        "jsCode": "const started = Date.now();\nconst answers = $input.all();\nconst questions = $('Golden questions').all();\nconst failed = [];\nfor (let i = 0; i < questions.length; i++) {\n  const raw = answers[i]?.json ?? {};\n  const status = raw.statusCode ?? raw.status ?? 0;\n  const body = raw.body ?? raw;\n  const answer = String(body.answer ?? '');\n  const isTicket = questions[i].json.question.includes('T-');\n  const passed = Number(status) === 200 && answer.length > 0 && (isTicket || answer.includes('[FAQ-'));\n  if (!passed) failed.push({ index: i + 1, question: questions[i].json.question, status, reason: Number(status) !== 200 ? 'http' : answer.length === 0 ? 'empty answer' : 'missing FAQ source' });\n}\nconst total = questions.length;\nconst passed = total - failed.length;\nreturn [{ json: { release: questions[0]?.json.release, passed, total, failed, seconds: (Date.now() - started) / 1000, verdict: failed.length === 0 ? 'promote' : 'rollback' } }];"
+      }
+    },
+    {
+      "name": "Record gate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1760, 300],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "http://data-api:8800/gates/helpdesk",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ release: $('Judge').first().json.release, verdict: $('Judge').first().json.verdict, passed: $('Judge').first().json.passed, total: $('Judge').first().json.total, failed: $('Judge').first().json.failed, source: 'my-release-check' }) }}",
+        "options": {"timeout": 3000, "response": {"response": {"neverError": true}}}
+      }
+    },
+    {
+      "name": "Build result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1980, 300],
+      "parameters": {"jsCode": "const j = $('Judge').first().json;\nreturn [{ json: { ...j, recorded: $json.stored === true } }];"}
+    },
+    {
+      "name": "Send result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2200, 300],
+      "parameters": {"respondWith": "json", "responseBody": "={{ $json }}", "options": {}}
+    }
+  ],
+  "connections": {
+    "Release check webhook": {"main": [[{"node": "Has release?", "type": "main", "index": 0}]]},
+    "Has release?": {"main": [[{"node": "Get release", "type": "main", "index": 0}], [{"node": "Reject missing release", "type": "main", "index": 0}]]},
+    "Get release": {"main": [[{"node": "Pick release", "type": "main", "index": 0}]]},
+    "Pick release": {"main": [[{"node": "Known release?", "type": "main", "index": 0}]]},
+    "Known release?": {"main": [[{"node": "Golden questions", "type": "main", "index": 0}], [{"node": "Reject unknown release", "type": "main", "index": 0}]]},
+    "Golden questions": {"main": [[{"node": "Ask helpdesk", "type": "main", "index": 0}]]},
+    "Ask helpdesk": {"main": [[{"node": "Judge", "type": "main", "index": 0}]]},
+    "Judge": {"main": [[{"node": "Record gate", "type": "main", "index": 0}]]},
+    "Record gate": {"main": [[{"node": "Build result", "type": "main", "index": 0}]]},
+    "Build result": {"main": [[{"node": "Send result", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
+}

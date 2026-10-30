@@ -1,0 +1,248 @@
+{
+  "name": "65-01 · 긴급도 조건 분기",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Three sample requests. In a real workflow they would come from a form, mail or webhook.\nreturn [\n  { json: { id: 'T-1', text: 'VPN이 끊겨서 고객 미팅에 들어갈 수 없어요', priority: 'urgent' } },\n  { json: { id: 'T-2', text: '프린터 토너 교체를 요청합니다', priority: 'normal' } },\n  { json: { id: 'T-3', text: '계정이 잠겨서 결재를 올릴 수 없어요', priority: 'urgent' } },\n];"
+      },
+      "name": "Sample requests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4db4fdb9-dbaf-51bb-aaf9-16a54ef93027",
+              "leftValue": "={{ $json.priority }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "urgent"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Is urgent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1f7b6098-3185-56cc-9d8e-4bcfec1e7ba4",
+              "name": "route",
+              "value": "즉시 담당자 연결",
+              "type": "string"
+            },
+            {
+              "id": "c01612ed-a8a0-5a0a-83b9-93f6ad2eaf31",
+              "name": "sla_minutes",
+              "value": "30",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "name": "Urgent route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        680,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7c65f93-009f-5a5a-8cad-71abcc7cc569",
+              "name": "route",
+              "value": "일반 접수",
+              "type": "string"
+            },
+            {
+              "id": "7148df87-83e5-54ca-9d67-619c60e6fe54",
+              "name": "sla_minutes",
+              "value": "480",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "name": "Normal route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        680,
+        100
+      ]
+    },
+    {
+      "name": "Condition webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -440,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "day65-condition",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Read priority",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -220,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const b=$json.body ?? {}; return [{json:{text:b.text ?? '', priority:b.priority ?? 'normal'}}];"
+      }
+    },
+    {
+      "name": "Send condition",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Sample requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample requests": {
+      "main": [
+        [
+          {
+            "node": "Is urgent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is urgent?": {
+      "main": [
+        [
+          {
+            "node": "Urgent route",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normal route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Condition webhook": {
+      "main": [
+        [
+          {
+            "node": "Read priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read priority": {
+      "main": [
+        [
+          {
+            "node": "Is urgent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Urgent route": {
+      "main": [
+        [
+          {
+            "node": "Send condition",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normal route": {
+      "main": [
+        [
+          {
+            "node": "Send condition",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "description": "65일차 n8n 실습: 긴급도 조건 분기. 제공된 예제를 바탕으로 구성했습니다. 외부 메일 발송이나 실제 업무 접수는 수행하지 않습니다."
+}

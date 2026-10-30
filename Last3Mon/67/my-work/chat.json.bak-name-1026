@@ -1,0 +1,68 @@
+{
+  "name": "67 Lab 01 chat (my)",
+  "nodes": [
+    {
+      "name": "IT question webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "my-chat",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "IT help agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [260, 300],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('IT question webhook').first().json.body.question }}",
+        "options": {
+          "systemMessage": "당신은 사내 IT 담당자입니다. 직원의 질문에 한국어 존댓말로 최대 3문장 이내로 간결하게 답하세요.",
+          "maxIterations": 5,
+          "returnIntermediateSteps": false
+        }
+      }
+    },
+    {
+      "name": "OpenAI chat model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [160, 520],
+      "parameters": {
+        "model": {"__rl": true, "mode": "id", "value": "gpt-4.1-mini"},
+        "options": {"temperature": 0}
+      },
+      "credentials": {
+        "openAiApi": {"id": "openAiCourse0001", "name": "OpenAI (.env)"}
+      }
+    },
+    {
+      "name": "Send answer",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [560, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { answer: $json.output } }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "IT question webhook": {
+      "main": [[{"node": "IT help agent", "type": "main", "index": 0}]]
+    },
+    "IT help agent": {
+      "main": [[{"node": "Send answer", "type": "main", "index": 0}]]
+    },
+    "OpenAI chat model": {
+      "ai_languageModel": [[{"node": "IT help agent", "type": "ai_languageModel", "index": 0}]]
+    }
+  },
+  "settings": {"executionOrder": "v1"}
+}

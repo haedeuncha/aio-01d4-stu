@@ -1,0 +1,66 @@
+# 재사용 설계서 · 공지 키트와 규칙 검사 모듈
+
+- 이름: 실습생
+- 사용한 CLI 에이전트: agy
+- 이 파일을 `my-work/DESIGN.md`로 복사해 채웁니다.
+
+## 1. 복사본 비교 (Lab 01 예제 1)
+
+분석 대상은 `samples/notice-maintenance.json`, `samples/notice-security.json`, `samples/notice-training.json`이다. 세 시나리오는 모두 `facts`를 받아 한국어 공지를 작성하고, 규칙 검사 후 게시 여부를 반환하는 같은 흐름을 사용한다.
+
+| 노드 | 세 파일에서 같은가 | 다른 것 (점검 · 보안 · 교육) | 어디로 (모듈 · 설정 표 · 그대로) |
+| --- | --- | --- | --- |
+| Notice webhook | 다름 | 웹훅 path (`sample-maintenance` / `sample-security` / `sample-training`) | 그대로 (`my-notice-kit` 하나로 통합) |
+| Has facts? | 같음 | 없음 (통합 키트에서는 kind 검사 추가) | 그대로 |
+| Reject empty | 같음 | 없음 | 그대로 |
+| Writer agent | 다름 | 머리말, 꼭 넣을 문장, 작성 지침(주의사항) | 설정 표 참조로 분리 |
+| OpenAI chat model | 같음 | 없음 (`gpt-4.1-mini`, temp 0) | 그대로 |
+| Build draft | 같음 | 없음 (코드블록 제거) | 그대로 |
+| Rule checks | 다름 (로직 동일, 설정값 상이) | `max_length` (600 / 500 / 800), `required_phrases` (없음 / 비밀번호 경고 / 신청 포털 안내) | 값은 설정 표로, 검사 로직은 모듈로 |
+| Build result | 다름 | 반환 객체의 `kind` 하드코딩 값 | 설정 표 및 입력값 사용 |
+| Send result | 같음 | 없음 | 그대로 |
+
+- 보안 공지의 규칙을 하나 고쳐야 한다면, 지금은 몇 곳을 고쳐야 하나?
+  - 작성자(`Writer agent`의 지시문)와 검사기(`Rule checks`의 검사 코드)의 최소 2곳을 고쳐야 합니다. (다른 공지에도 적용되는 공통 규칙일 경우 3개 파일 전체 총 6곳 수정 필요)
+
+### 시나리오별 업무 계약
+
+| 시나리오 | 입력 예 | 작성 규칙 | 검사 결과 | 게시 조건 |
+| --- | --- | --- | --- | --- |
+| 점검 | `kind=maintenance`, 점검 일시·영향 범위 | `[점검 안내]`, 사용 불가 항목과 종료 후 조치 | 최대 600자, 필수 문장 없음 | 검사 통과 시 `게시 가능` |
+| 보안 | `kind=security`, 보안 안내 사실 | `[보안 안내]`, 비밀번호 요구 금지, 필수 보안 문장 포함 | 최대 500자, `IT팀은 절대 비밀번호를 묻지 않습니다.` 포함 | 검사 통과 시 `게시 가능` |
+| 교육 | `kind=training`, 대상·일시·장소·신청 정보 | `[교육 안내]`, 대상과 신청 방법 안내, 필수 신청 문장 포함 | 최대 800자, `신청은 IT 포털에서 할 수 있습니다.` 포함 | 검사 통과 시 `게시 가능` |
+
+세 시나리오에서 `Writer agent`, `Rule checks`, `Build result`에 종류별 값이 반복된다. 따라서 통합 키트에서는 `Kind settings` 설정 표가 종류별 차이를 관리하고, 작성·검사·결과 노드는 그 표를 읽도록 바꾼다.
+
+## 2. 설정 표 (Lab 01 예제 2 · 과제)
+
+| kind | 머리말 | 최대 길이 | 꼭 넣을 문장 | 주의 |
+| --- | --- | --- | --- | --- |
+| maintenance | [점검 안내] | 600 | (없음) | 작업 중 불가 항목과 작업 후 조치 안내 |
+| security | [보안 안내] | 500 | IT팀은 절대 비밀번호를 묻지 않습니다. | 독자 행동 수칙 안내, 비밀번호 요구 금지 |
+| training | [교육 안내] | 800 | 신청은 IT 포털에서 할 수 있습니다. | 대상자, 일시/장소, 신청 방법 안내 |
+| survey | [설문 안내] | 500 | 응답은 익명으로 처리됩니다. | 설문 목적 및 마감 일정 안내 |
+
+- 새 종류를 더할 때 고친 노드:
+  - `Kind settings` (설정 표 Code 노드 1곳)
+
+## 3. 모듈 계약 (Lab 02)
+
+| 모듈 | id | 입력 (이름 · 종류) | 결과 | 쓰는 곳 |
+| --- | --- | --- | --- | --- |
+| 규칙 검사 | modRuleCheck01 | facts (string), draft (string), max_length (number), required_phrases (array) | passed (boolean), codes (array), issues (array) | notice-kit, sms, rule-check-test |
+
+## 4. 바꿀 때 (Lab 03)
+
+| 바꾼 것 | 하위 호환인가 | 같은 id · 새 id | 다시 돌린 테스트 | 결과 |
+| --- | --- | --- | --- | --- |
+| 바깥 링크 검사 (`allowed_domains`) | 예 (옵션 파라미터) | modRuleCheck01 (같은 id) | lab01, lab02-module, lab02-challenge | 전원 통과 |
+| 심각도 (`blocking` · `warnings`) | 아니오 (반환 필드 구조 변경) | modRuleCheck02 (새 id) | lab03-v2, lab03 | 통과 |
+
+## 5. 영향 표 (Lab 03 과제)
+
+| 모듈 · 버전 | 쓰는 워크플로우 | 그 워크플로우의 테스트 |
+| --- | --- | --- |
+| modRuleCheck01 (v1.1) | notice-kit.json, sms.json | cases/lab01.json, cases/lab02-challenge.json |
+| modRuleCheck02 (v2.0) | notice-kit-v2.json | cases/lab03-v2.json |

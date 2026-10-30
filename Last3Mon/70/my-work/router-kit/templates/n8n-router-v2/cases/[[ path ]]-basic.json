@@ -1,0 +1,44 @@
+{
+  "webhook": "[[ path ]]",
+  "cases": [
+    {
+      "name": "빈 요청 · 400",
+      "body": {
+        "message": "",
+        "user": "[[ example_user ]]"
+      },
+      "expect": {
+        "status": 400
+      }
+    },
+    {
+      "name": "user 없음 · 400",
+      "body": {
+        "message": "[[ other_example ]]"
+      },
+      "expect": {
+        "status": 400
+      }
+    },
+    {
+      "name": "범위 밖 · 담당자 연결",
+      "body": {
+        "message": "[[ other_example ]]",
+        "user": "[[ example_user ]]"
+      },
+      "expect": {
+        "equals": {
+          "count": 1,
+          "results.0.route": "담당자 연결",
+          "results.0.agent": "담당자 연결",
+          "summary.담당자 연결": 1
+        },
+        "contains": {
+          "reply": [
+            "[[ example_user ]] 님 · 1건 처리: 🙋 담당자 연결 1"
+          ]
+        }
+      }
+    }
+  ]
+}

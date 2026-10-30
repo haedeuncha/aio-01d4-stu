@@ -1,0 +1,585 @@
+{
+  "name": "70-1 · 📣 Lab01~03 · 공지 키트 (설정 표 + 모듈 v2)",
+  "nodes": [
+    {
+      "name": "Kit webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "my-notice-kit",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Has kind and facts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c0",
+              "leftValue": "={{ String($json.body.facts ?? '').trim() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.body.kind }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Reject empty",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        680
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"error\": \"kind and facts are required\" }",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "name": "Kind settings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// The only per-kind part of the template: one row per notice kind.\nconst KINDS = {\n  \"maintenance\": {\n    \"label\": \"점검\",\n    \"prefix\": \"[점검 안내]\",\n    \"max_length\": 600,\n    \"required_phrases\": [],\n    \"extra\": \"Say clearly what cannot be used during the work and what to do after it.\"\n  },\n  \"security\": {\n    \"label\": \"보안\",\n    \"prefix\": \"[보안 안내]\",\n    \"max_length\": 500,\n    \"required_phrases\": [\n      \"IT팀은 절대 비밀번호를 묻지 않습니다.\"\n    ],\n    \"extra\": \"Tell readers what to do and what never to do. Never ask for passwords.\"\n  },\n  \"training\": {\n    \"label\": \"교육\",\n    \"prefix\": \"[교육 안내]\",\n    \"max_length\": 800,\n    \"required_phrases\": [\n      \"신청은 IT 포털에서 할 수 있습니다.\"\n    ],\n    \"extra\": \"Say who should attend, when and where, and how to apply.\"\n  },\n  \"survey\": {\n    \"label\": \"설문\",\n    \"prefix\": \"[설문 안내]\",\n    \"max_length\": 500,\n    \"required_phrases\": [\n      \"응답은 익명으로 처리됩니다.\"\n    ],\n    \"extra\": \"Say the purpose of the survey, the deadline and how long it takes.\"\n  }\n};\nconst body = $('Kit webhook').first().json.body;\nconst ALIASES = { '점검': 'maintenance', '보안': 'security', '교육': 'training', '설문': 'survey' };\nconst raw = String(body.kind ?? '').trim().toLowerCase();\nconst kind = ALIASES[raw] ?? raw;\nif (!KINDS[kind]) return [{ json: { known: false, kinds: Object.keys(KINDS) } }];\nreturn [{ json: { known: true, kind, ...KINDS[kind] } }];"
+      }
+    },
+    {
+      "name": "Known kind?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        760,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c0",
+              "leftValue": "={{ $json.known }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Reject unknown kind",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        680
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: 'unknown kind', kinds: $json.kinds }) }}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "name": "Writer agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1040,
+        300
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=제목 머리말(prefix): {{ $('Kind settings').first().json.prefix }}\n꼭 넣을 문장: {{ ($('Kind settings').first().json.required_phrases ?? []).join(' / ') || '없음' }}\n이 종류의 주의: {{ $('Kind settings').first().json.extra }}\n요청: {{ $('Kit webhook').first().json.body.request || '공지' }}\n사실:\n{{ $('Kit webhook').first().json.body.facts }}",
+        "options": {
+          "systemMessage": "You write one company IT notice in Korean from the facts only. The first line is the title and it starts with the given prefix. Then 3 to 6 short lines. Copy every date and time exactly as written in the facts. Do not add promises, compensation, dates, people or contacts that are not in the facts. If required sentences are given, include each of them exactly as written. Return only the notice text.",
+          "maxIterations": 2
+        }
+      }
+    },
+    {
+      "name": "OpenAI chat model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1060,
+        520
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "openAiCourse0001",
+          "name": "OpenAI (.env)"
+        }
+      }
+    },
+    {
+      "name": "Build draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// The writer's text, without code fences.\nreturn [{ json: { draft: String($json.output ?? '').trim().replace(/^```\\w*\\s*|```$/g, '').trim() } }];"
+      }
+    },
+    {
+      "name": "Rule check module",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1640,
+        300
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "modRuleCheck02"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "facts": "={{ $('Kit webhook').first().json.body.facts }}",
+            "draft": "={{ $json.draft }}",
+            "max_length": "={{ $('Kind settings').first().json.max_length }}",
+            "required_phrases": "={{ $('Kind settings').first().json.required_phrases }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "facts",
+              "displayName": "facts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "draft",
+              "displayName": "draft",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "max_length",
+              "displayName": "max_length",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "required_phrases",
+              "displayName": "required_phrases",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Build result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// The kit's contract with module v2: blocking stops, warnings are reported.\nconst review = $json;\nconst draft = $('Build draft').first().json.draft;\nconst ok = review.passed === true;\nreturn [{ json: { kind: $('Kind settings').first().json.kind, route: ok ? '게시 가능' : '담당자 확인',\n  published: ok, notice: draft, blocking: review.blocking ?? [], warnings: review.warnings ?? [],\n  // Keep the old field so callers of the kit do not break.\n  codes: [...(review.blocking ?? []), ...(review.warnings ?? [])] } }];"
+      }
+    },
+    {
+      "name": "Send result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2140,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "11232e2f-d2b0-53b1-a6c8-0d887fbca6b3",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -50,
+        -150
+      ],
+      "parameters": {
+        "content": "# 📣🌈 70 · 공지 키트 (Notice kit) 🌈📣\n> 📋 **종류(kind)만 바꾸면** 점검·보안·교육… 공지를 워크플로우 하나로! 다른 값은 설정 표 한 곳에, 검사는 🧩 모듈 v2에게\n\n`POST /webhook/my-notice-kit` · 입력 `kind`, `facts` · 🧪 `lab01` · `lab01-challenge` · 과제 케이스",
+        "width": 2340,
+        "height": 250,
+        "color": 6
+      }
+    },
+    {
+      "id": "2481cb29-c337-5364-a7ea-02ca18937b76",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -50,
+        130
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 📥 받기\n💌 `kind` · `facts` 둘 다 필수",
+        "width": 440,
+        "height": 350,
+        "color": 5
+      }
+    },
+    {
+      "id": "fdd745f8-1317-5874-8633-bd2849f3c189",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        150.0,
+        510
+      ],
+      "parameters": {
+        "content": "## 🚫 빈 요청\n**400** 🙅",
+        "width": 280.0,
+        "height": 350,
+        "color": 3
+      }
+    },
+    {
+      "id": "96ca3a0d-46cd-5178-9502-2ea5c1731cd7",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        470,
+        130
+      ],
+      "parameters": {
+        "content": "## 2️⃣ 📋 설정 표\n종류마다 다른 것 한 곳에:\n머리말 · 최대 길이 · 꼭 넣을 문장",
+        "width": 440,
+        "height": 350,
+        "color": 1
+      }
+    },
+    {
+      "id": "eeed611d-0f06-513c-b021-b3143b6becf0",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        670.0,
+        510
+      ],
+      "parameters": {
+        "content": "## 🛑 없는 종류\n**400** + 있는 종류 목록\n(표에 없으면 규칙도 없다 → 멈춤)",
+        "width": 280.0,
+        "height": 350,
+        "color": 3
+      }
+    },
+    {
+      "id": "c57b134a-5f0c-57c1-ae27-29b80ebcfae9",
+      "name": "Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        990,
+        130
+      ],
+      "parameters": {
+        "content": "## 3️⃣ ✍️ 작성자 (LLM)\n📝 설정 표의 머리말·꼭 넣을 문장대로",
+        "width": 340,
+        "height": 550,
+        "color": 6
+      }
+    },
+    {
+      "id": "55a34c82-d447-584e-82d1-45a61e34a8fe",
+      "name": "Note 6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1350,
+        130
+      ],
+      "parameters": {
+        "content": "## 4️⃣ 🧩 규칙 검사 모듈 v2\nExecute Workflow → `modRuleCheck02`\n입력: facts · draft · max_length · required_phrases",
+        "width": 440,
+        "height": 350,
+        "color": 2
+      }
+    },
+    {
+      "id": "089666f4-887d-58bb-9c19-469947df8429",
+      "name": "Note 7",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1850,
+        130
+      ],
+      "parameters": {
+        "content": "## 5️⃣ 🎁 결과\n`codes`는 **남기고** blocking · warnings를 **더함**",
+        "width": 440,
+        "height": 350,
+        "color": 4
+      }
+    },
+    {
+      "id": "19a3fb3b-fe47-5ddd-959e-a651b90f551b",
+      "name": "Note 8",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        960
+      ],
+      "parameters": {
+        "content": "## 💡 템플릿화 3분류\n- 🟰 **같은 것**: 흐름, 날짜·연락처 검사 → 하나로 (여러 곳이면 모듈)\n- 🔀 **종류마다 다른 것**: 머리말·길이·꼭 넣을 문장 → **설정 표**\n- 🐛 **우연히 다른 것**: 복사가 만든 버그 → 하나로 맞춤",
+        "width": 900,
+        "height": 250,
+        "color": 1
+      }
+    },
+    {
+      "id": "680f26f2-a7fd-5dca-851e-3d6058a9ed75",
+      "name": "Note 9",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        880,
+        960
+      ],
+      "parameters": {
+        "content": "## ⚠️ 계약은 층마다\n모듈 v2로 옮기며 키트 결과에서 `codes`를 빼면 `lab01` 2/5 💥\n→ 옛 필드는 남기고 새 필드는 **더하기**",
+        "width": 700,
+        "height": 250,
+        "color": 2
+      }
+    },
+    {
+      "id": "ef17d12d-085e-5a9b-a524-84ede39ae2d8",
+      "name": "Note 10",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1620,
+        960
+      ],
+      "parameters": {
+        "content": "## 🧪 확인 명령\n`uv run tools/flow.py push my-work/notice-kit.json`\n`uv run tools/flow.py test cases/lab01.json -v`\n`uv run tools/flow.py test cases/lab01-challenge.json -v`",
+        "width": 640,
+        "height": 250,
+        "color": 7
+      }
+    }
+  ],
+  "connections": {
+    "Kit webhook": {
+      "main": [
+        [
+          {
+            "node": "Has kind and facts?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has kind and facts?": {
+      "main": [
+        [
+          {
+            "node": "Kind settings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject empty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kind settings": {
+      "main": [
+        [
+          {
+            "node": "Known kind?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Known kind?": {
+      "main": [
+        [
+          {
+            "node": "Writer agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject unknown kind",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI chat model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Writer agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Writer agent": {
+      "main": [
+        [
+          {
+            "node": "Build draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build draft": {
+      "main": [
+        [
+          {
+            "node": "Rule check module",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rule check module": {
+      "main": [
+        [
+          {
+            "node": "Build result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build result": {
+      "main": [
+        [
+          {
+            "node": "Send result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

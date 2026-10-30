@@ -1,0 +1,316 @@
+{
+  "name": "69 Writer · 작성자 (my)",
+  "nodes": [
+    {
+      "name": "Writer webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "my-writer",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Has facts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c0",
+              "leftValue": "={{ $json.body.facts }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Reject empty",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        680
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"error\": \"facts are required\" }",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "name": "Writer agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=요청: {{ $('Writer webhook').first().json.body.request || 'IT 공지' }}\n사실:\n{{ $('Writer webhook').first().json.body.facts }}{{ $('Writer webhook').first().json.body.feedback ? '\\n\\n이전 초안:\\n' + $('Writer webhook').first().json.body.previous_draft + '\\n\\n검토 의견 (모두 고칠 것):\\n' + $('Writer webhook').first().json.body.feedback : '' }}",
+        "options": {
+          "systemMessage": "You are the writer of company IT notices, in Korean. Write one notice from the facts only. First line: a title in [square brackets]. Then 3 to 6 short lines. Copy every date and time exactly as written in the facts (for example 10월 23일, 22:00~24:00). Do not add promises, compensation, dates, people or contacts that are not in the facts. If reviewer feedback is given, rewrite the previous draft so that every point of the feedback is fixed, and change nothing else. Fixing never means adding: when you remove a phone number or e-mail address, do not put any other number, extension or address in its place. Return only the notice text.",
+          "maxIterations": 2
+        }
+      }
+    },
+    {
+      "name": "OpenAI chat model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        540,
+        520
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "openAiCourse0001",
+          "name": "OpenAI (.env)"
+        }
+      }
+    },
+    {
+      "name": "Build draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// The writer's contract: { draft }.\nconst draft = String($json.output ?? '').trim().replace(/^```\\w*\\s*|```$/g, '').trim();\nreturn [{ json: { draft } }];"
+      }
+    },
+    {
+      "name": "Send result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "b7a4991f-df28-535d-9d96-c4f82cc497de",
+      "name": "Note 0",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -50,
+        -150
+      ],
+      "parameters": {
+        "content": "# ✍️✨ 69 Lab 01 · 작성자 (Writer) ✨✍️\n> 📄 받은 **facts만** 보고 공지 초안을 쓴다 · 🔁 고칠 땐 `previous_draft` + `feedback` 반영\n\n`POST /webhook/my-writer` · 🧪 `cases/lab01.json` · 🏷️ 결과 `{draft}`",
+        "width": 1300,
+        "height": 250,
+        "color": 6
+      }
+    },
+    {
+      "id": "79eae237-b735-5d09-b93c-516ce2cbbe3e",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -50,
+        130
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 📥 받기\n💌 `request` · `facts` · (`previous_draft` · `feedback`)\n🚪 facts 없으면 돌려보냄",
+        "width": 440,
+        "height": 350,
+        "color": 5
+      }
+    },
+    {
+      "id": "ad79da1d-ff38-58a0-b956-e5df1fd0c255",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        130,
+        510
+      ],
+      "parameters": {
+        "content": "## 🚫 facts 없음\n**400** 🙅",
+        "width": 260,
+        "height": 350,
+        "color": 3
+      }
+    },
+    {
+      "id": "1d8ddd4a-1391-575b-8043-8c7fc62f107b",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        470,
+        130
+      ],
+      "parameters": {
+        "content": "## 2️⃣ 🤖 초안 쓰기 (LLM)\n📝 날짜·시간은 facts 그대로\n🙅 없는 약속·연락처 금지",
+        "width": 340,
+        "height": 550,
+        "color": 6
+      }
+    },
+    {
+      "id": "47879e9a-b909-55f3-85d0-f35cc485c017",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        830,
+        130
+      ],
+      "parameters": {
+        "content": "## 3️⃣ 🎁 결과\n✂️ 초안만 꺼내 `{draft}`",
+        "width": 420,
+        "height": 350,
+        "color": 4
+      }
+    },
+    {
+      "id": "73f1ba8d-d595-5a09-96a4-b3e656b7fbd0",
+      "name": "Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        920
+      ],
+      "parameters": {
+        "content": "## 🪪 역할 카드\n- ✅ **하는 일**: 공지 초안 쓰기\n- 📥 **받는 것**: request · facts\n- 📤 **내놓는 것**: draft\n- 🚫 **하지 않는 일**: 검토 · 게시 결정",
+        "width": 620,
+        "height": 230,
+        "color": 1
+      }
+    },
+    {
+      "id": "79e4e68e-149c-5112-ae20-bb5a1790b523",
+      "name": "Note 6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        600,
+        920
+      ],
+      "parameters": {
+        "content": "## 🧪 확인 명령\n`uv run tools/flow.py push my-work/writer.json`\n`uv run tools/flow.py test cases/lab01.json -v`\n`uv run tools/flow.py call my-writer requests/notice-mail.json -v`",
+        "width": 640,
+        "height": 230,
+        "color": 7
+      }
+    }
+  ],
+  "connections": {
+    "Writer webhook": {
+      "main": [
+        [
+          {
+            "node": "Has facts?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has facts?": {
+      "main": [
+        [
+          {
+            "node": "Writer agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject empty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI chat model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Writer agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Writer agent": {
+      "main": [
+        [
+          {
+            "node": "Build draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build draft": {
+      "main": [
+        [
+          {
+            "node": "Send result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

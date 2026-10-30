@@ -1,0 +1,116 @@
+{
+  "webhook": "rk-trip",
+  "cases": [
+    {
+      "name": "복합 3개 · 규정·출장비·일정",
+      "body": {
+        "message": "11월 12일부터 14일까지 부산 출장 가. 숙소는 하루 얼마까지 돼? 출장비 신청하고 일정도 잡아 줘.",
+        "user": "이준호"
+      },
+      "expect": {
+        "equals": {
+          "count": 3,
+          "results.0.agent": "a3-trip-policy",
+          "results.1.route": "접수 완료",
+          "results.2.route": "등록 완료"
+        },
+        "contains": {
+          "results.0.answer": [
+            "100,000",
+            "10만"
+          ],
+          "results.1.answer": [
+            "290,000"
+          ]
+        }
+      }
+    },
+    {
+      "name": "서울 1박 2일 · 180,000원",
+      "body": {
+        "message": "11월 16일부터 17일까지 서울 출장비 신청해 줘",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "results.0.route": "접수 완료"
+        },
+        "contains": {
+          "results.0.answer": [
+            "180,000"
+          ]
+        }
+      }
+    },
+    {
+      "name": "10박 · 팀장 결재",
+      "body": {
+        "message": "11월 16일부터 26일까지 대구 출장비 신청해 줘",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "results.0.route": "담당자 연결"
+        }
+      }
+    },
+    {
+      "name": "날짜 없음 · 입력 필요",
+      "body": {
+        "message": "대구 출장비 신청해 줘",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "results.0.route": "입력 필요"
+        }
+      }
+    },
+    {
+      "name": "지난 날짜 일정 · 거절",
+      "body": {
+        "message": "2026년 10월 1일 광주 출장 일정 등록해 줘",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "results.0.route": "거절"
+        }
+      }
+    },
+    {
+      "name": "범위 밖 · 기차표 예매",
+      "body": {
+        "message": "부산 가는 KTX 표 예매해 줘",
+        "user": "이준호"
+      },
+      "expect": {
+        "equals": {
+          "results.0.route": "담당자 연결"
+        }
+      }
+    },
+    {
+      "name": "일정 날짜 없음 · 입력 필요",
+      "body": {
+        "message": "광주 출장 일정 잡아 줘",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "results.0.route": "입력 필요"
+        }
+      }
+    },
+    {
+      "name": "빈 요청 · 400",
+      "body": {
+        "message": "  ",
+        "user": "이준호"
+      },
+      "expect": {
+        "status": 400
+      }
+    }
+  ]
+}

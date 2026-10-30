@@ -1,0 +1,73 @@
+{
+  "id": "modBuildReply01",
+  "name": "70-9 · 🧩 모듈 · 답장 만들기 v1 (modBuildReply01)",
+  "nodes": [
+    {
+      "name": "When called by another workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "inputSource": "workflowInputs",
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "user",
+              "type": "string"
+            },
+            {
+              "name": "results",
+              "type": "array"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Build reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// 모듈 입력: user, results\nconst results = [...(Array.isArray($json.results) ? $json.results : [])].sort((a, b) => a.index - b.index);\nconst user = String($json.user ?? '').trim();\nconst ICON = { '자동 답변': '✅', '접수 완료': '📝', '등록 완료': '📅', '거절': '⛔', '입력 필요': '❓', '담당자 연결': '🙋' };\nconst oneLine = value => String(value ?? '').replace(/\\s+/g, ' ').trim();\n// 여러 줄 답(SNS 채널별 글)은 줄을 살려 들여 쓴다\nconst block = value => String(value ?? '').split('\\n').map(oneLine).filter(Boolean).join('\\n   ');\nconst lines = results.map(r => `${r.index}. ${ICON[r.route] ?? '•'} [${r.route}] ${block(r.answer)}`);\nconst ask = results.filter(r => r.route === '입력 필요').map(r => r.index);\nconst handed = results.filter(r => r.route === '담당자 연결').map(r => r.index);\nconst tail = [];\nif (ask.length) tail.push(`❓ ${ask.join(', ')}번은 필요한 정보를 알려 주시면 바로 처리할게요.`);\nif (handed.length) tail.push(`🙋 ${handed.join(', ')}번은 담당자가 이어서 연락드립니다.`);\nconst reply = [`${user} 님, 요청하신 ${results.length}가지를 정리했어요.`, ...lines, ...tail].join('\\n');\nreturn [{ json: { count: results.length, results, reply } }];"
+      }
+    },
+    {
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        60
+      ],
+      "parameters": {
+        "content": "## 🧩 모듈 · 답장 만들기 v1 `modBuildReply01`\n입력 `user`, `results[]` → 결과 `{count, results(index 순), reply}`\n✅ 📝 📅 ⛔ ❓ 🙋 아이콘 · 입력 필요 / 담당자 연결 안내 줄\n⚠️ 입력 · 결과 이름을 바꾸려면 새 id(`modBuildReply02`)로",
+        "width": 620,
+        "height": 200,
+        "color": 6
+      }
+    }
+  ],
+  "connections": {
+    "When called by another workflow": {
+      "main": [
+        [
+          {
+            "node": "Build reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
