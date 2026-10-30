@@ -1,0 +1,236 @@
+{
+  "name": "auto3 · 출장비 신청 Agent",
+  "nodes": [
+    {
+      "name": "Expense webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        65,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "a3-trip-expense",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Has user?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        495,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ ['user'].every(k => typeof $json.body?.[k] === 'string' && $json.body[k].trim() !== '') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Reject missing",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        495,
+        520
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"error\": \"user is required\", \"hint\": \"예: {\\\"user\\\": \\\"이준호\\\", \\\"city\\\": \\\"부산\\\", \\\"start\\\": \\\"2026-11-12\\\", \\\"end\\\": \\\"2026-11-14\\\"}\"}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "name": "Calculate and accept",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        925,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const body = $('Expense webhook').first().json.body;\nconst today = $now.setZone('Asia/Seoul').toFormat('yyyy-MM-dd');\nconst isDate = s => typeof s === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(s) && !isNaN(Date.parse(s + 'T00:00:00Z')) && new Date(s + 'T00:00:00Z').toISOString().slice(0, 10) === s;\nconst dayKo = s => '일월화수목금토'[new Date(s + 'T00:00:00Z').getUTCDay()];\nconst addDays = (s, n) => new Date(Date.parse(s + 'T00:00:00Z') + n * 86400000).toISOString().slice(0, 10);\nconst daysBetween = (a, b) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / 86400000);\n// LLM이 날짜를 지어내지 않았는지: 요청 문장에 날짜를 말하는 표현이 있어야 날짜를 믿는다\nconst mentionsDate = text => /\\d{1,2}\\s*월|\\d{1,2}\\s*일|\\d{4}-\\d{1,2}-\\d{1,2}|\\d{1,2}\\/\\d{1,2}|오늘|내일|모레|글피|요일|이번\\s*주|다음\\s*주|주말|월말|월초/.test(String(text ?? ''));\nconst range = (a, b) => (!b || a === b) ? `${a}(${dayKo(a)})` : `${a}(${dayKo(a)}) ~ ${b}(${dayKo(b)})`;\nconst won = n => Math.round(n).toString().replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',') + '원';\nconst hash = s => { let h = 5381; for (const c of s) h = ((h * 33) ^ c.codePointAt(0)) >>> 0; return h.toString(36).toUpperCase().slice(-4).padStart(4, '0'); };\nconst TIER = { '서울': 120000, '부산': 100000, '대구': 100000, '광주': 100000, '대전': 100000, '인천': 100000, '울산': 100000 };\nconst city = String(body.city ?? '').trim().replace(/(특별시|광역시|시)$/, '');\nconst user = String(body.user).trim();\nconst start = String(body.start ?? '').trim();\nconst end = String(body.end ?? '').trim() || start;\nconst transport = Math.max(0, Math.round(Number(body.transport) || 0));\nconst out = (route, answer, extra = {}) => [{ json: { route, answer, user, city, ...extra } }];\nif (!city) return out('입력 필요', '출장 가는 도시를 알려 주세요. 예: \"부산 출장\"');\nif (!isDate(start) || !isDate(end)) return out('입력 필요', '출장 날짜(가는 날·오는 날)를 알려 주세요. 예: \"11월 12일부터 14일까지\"');\nif (end < start) return out('입력 필요', `오는 날(${end})이 가는 날(${start})보다 빠릅니다.`);\nif (start < today) return out('거절', `지난 출장은 출장비 신청이 아니라 정산으로 처리해요. 복귀 후 5일 안에 영수증을 제출해 주세요 (TR-5).`);\n// 금액은 LLM이 아니라 규정표로 계산 (TR-1, TR-2, TR-3)\nconst perNight = TIER[city] ?? 80000;\nconst nights = daysBetween(start, end);\nconst days = nights + 1;\nconst lodging = perNight * nights;\nconst perDiem = 30000 * days;\nconst amount = lodging + perDiem + transport;\nconst breakdown = { lodging: { per_night: perNight, nights, total: lodging }, per_diem: { per_day: 30000, days, total: perDiem }, transport };\nconst detail = `숙박 ${won(perNight)} × ${nights}박 + 일비 ${won(30000)} × ${days}일 + 교통비 ${won(transport)}${transport ? '' : '(영수증으로 나중에 정산, TR-3)'}`;\nconst head = `${city} 출장 ${range(start, end)}, ${nights}박 ${days}일`;\nif (nights > 7 || amount > 1000000) return out('담당자 연결', `${head} 예상 출장비는 ${won(amount)}입니다. ${nights > 7 ? '7박을 넘는 장기 출장' : '총액 100만 원 초과'}이라 팀장 결재가 필요해 담당자에게 연결했어요 (TR-4). ${detail}`, { amount, breakdown });\nconst request_id = `T-${start.replace(/-/g, '')}-${hash(user + city + end + transport)}`;\nreturn out('접수 완료', `${head} 출장비 ${won(amount)} 신청을 접수했습니다 (접수 번호 ${request_id}). ${detail}. 복귀 후 5일 안에 영수증을 내 주세요 (TR-5).`,\n  { request_id, start, end, nights, days, amount, breakdown });"
+      }
+    },
+    {
+      "name": "Send result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1355,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "4347c823-c300-5f3a-be96-58b437da5ede",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -110
+      ],
+      "parameters": {
+        "content": "# ✨ 💳 auto3 · 출장비 신청 ✨\n`POST /webhook/a3-trip-expense` · `user`, `city`, `start`, `end`, `transport`\n💡 금액은 Code가 규정표로 계산 (LLM 아님) · 7박/100만 원 넘으면 팀장 결재",
+        "width": 1640,
+        "height": 190,
+        "color": 3
+      }
+    },
+    {
+      "id": "401f3ef6-e4a5-56ac-8157-31c7d1601df1",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        110
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 📥 받기 · 입력 확인\n- `Expense webhook`\n- `Has user?`\n- `Reject missing`",
+        "width": 810.0,
+        "height": 600,
+        "color": 5
+      }
+    },
+    {
+      "id": "1039a36a-d6b8-5c7b-ac49-5fc5dda8e769",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        770.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 2️⃣ 🧮 Code로 처리 · 검사\n- `Calculate and accept`",
+        "width": 410.0,
+        "height": 600,
+        "color": 1
+      }
+    },
+    {
+      "id": "50e7ae4c-fc43-52b3-845d-2c9674cc8ac7",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1200.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 3️⃣ 📤 답장\n- `Send result`",
+        "width": 380.0,
+        "height": 600,
+        "color": 4
+      }
+    },
+    {
+      "id": "7c872086-5831-5c1b-9e0a-37695af9fe28",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        770
+      ],
+      "parameters": {
+        "content": "## ▶ 실행해 보기\n이 워크플로우는 **게시(Published)** 되어 있어서 아래 주소로 바로 부를 수 있어요. 터미널은 `Last3Mon/68` 폴더에서.\n\n**① 요청 하나 보내기 (JSON 그대로)**\n```\nuv run tools/flow.py call a3-trip-expense '{\"user\": \"이준호\", \"city\": \"부산\", \"start\": \"2026-11-12\", \"end\": \"2026-11-14\"}'\n```\n**② 결과 보기**: 화면 위 **Executions** 탭 → 맨 위 실행 → 노드를 눌러 들어온 값 · 나간 값 확인",
+        "width": 1000,
+        "height": 330,
+        "color": 7
+      }
+    },
+    {
+      "id": "86f774ef-37df-500b-b3b0-dd69a2dc7b63",
+      "name": "Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        980,
+        770
+      ],
+      "parameters": {
+        "content": "## 💡 이 Agent는 혼자 쓰기보다\n라우터 **`a3-trip`** 가 HTTP로 부릅니다.\n직원 요청 한 문장은 라우터에 보내세요.",
+        "width": 640,
+        "height": 170,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Expense webhook": {
+      "main": [
+        [
+          {
+            "node": "Has user?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has user?": {
+      "main": [
+        [
+          {
+            "node": "Calculate and accept",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate and accept": {
+      "main": [
+        [
+          {
+            "node": "Send result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

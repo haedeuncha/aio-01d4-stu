@@ -1,0 +1,44 @@
+{
+  "webhook": "rk-trip",
+  "cases": [
+    {
+      "name": "빈 요청 · 400",
+      "body": {
+        "message": "",
+        "user": "이준호"
+      },
+      "expect": {
+        "status": 400
+      }
+    },
+    {
+      "name": "user 없음 · 400",
+      "body": {
+        "message": "부산 가는 KTX 표 예매해 줘"
+      },
+      "expect": {
+        "status": 400
+      }
+    },
+    {
+      "name": "범위 밖 · 담당자 연결",
+      "body": {
+        "message": "부산 가는 KTX 표 예매해 줘",
+        "user": "이준호"
+      },
+      "expect": {
+        "equals": {
+          "count": 1,
+          "results.0.route": "담당자 연결",
+          "results.0.agent": "담당자 연결",
+          "summary.담당자 연결": 1
+        },
+        "contains": {
+          "reply": [
+            "이준호 님 · 1건 처리: 🙋 담당자 연결 1"
+          ]
+        }
+      }
+    }
+  ]
+}

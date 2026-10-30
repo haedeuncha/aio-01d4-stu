@@ -1,0 +1,236 @@
+{
+  "name": "auto3 · HR 연차 조회 Agent",
+  "nodes": [
+    {
+      "name": "Balance webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        65,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "a3-hr-balance",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Has user?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        495,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ ['user'].every(k => typeof $json.body?.[k] === 'string' && $json.body[k].trim() !== '') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Reject missing",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        495,
+        520
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"error\": \"user is required\", \"hint\": \"예: {\\\"user\\\": \\\"박서연\\\"}\"}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "name": "Look up balance",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        925,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const body = $('Balance webhook').first().json.body;\n// 연습용 가짜 인사 데이터 (2026년)\nconst LEAVE = { '박서연': { total: 15, used: 6 }, '이준호': { total: 15, used: 14.5 }, '김민지': { total: 20, used: 3 } };\nconst user = String(body.user).trim();\nconst target = String(body.target ?? '').replace(/\\s*(님|씨)$/, '').trim() || user;\n// 권한 검사는 라우터를 믿지 않고 여기서 한다: 본인 것만\nif (target !== user) return [{ json: { route: '담당자 연결', answer: `다른 직원(${target})의 연차는 본인과 인사팀만 볼 수 있어 인사팀에 연결했습니다.`, user } }];\nconst row = LEAVE[user];\nif (!row) return [{ json: { route: '담당자 연결', answer: `${user} 님의 연차 기록을 찾지 못해 인사팀에 연결했습니다.`, user } }];\nconst remaining = row.total - row.used;\nreturn [{ json: { route: '자동 답변', answer: `${user} 님의 남은 연차는 ${remaining}일입니다 (올해 ${row.total}일 중 ${row.used}일 사용). 남은 연차는 다음 해로 최대 5일까지 넘길 수 있어요 (HR-5).`,\n  user, total: row.total, used: row.used, remaining } }];"
+      }
+    },
+    {
+      "name": "Send result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1355,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "ac4dadb6-5494-5b3a-a6a3-bf59319b35e9",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -110
+      ],
+      "parameters": {
+        "content": "# ✨ 🧮 auto3 · HR 연차 조회 ✨\n`POST /webhook/a3-hr-balance` · `user`, `target`(선택)\n🔒 본인 것만 · 남의 연차는 담당자 연결",
+        "width": 1640,
+        "height": 190,
+        "color": 4
+      }
+    },
+    {
+      "id": "481343aa-58d0-5e80-9a36-3fc92fdedf46",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        110
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 📥 받기 · 입력 확인\n- `Balance webhook`\n- `Has user?`\n- `Reject missing`",
+        "width": 810.0,
+        "height": 600,
+        "color": 5
+      }
+    },
+    {
+      "id": "1cb3af60-bbb8-5b20-91b0-972d32a4587a",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        770.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 2️⃣ 🧮 Code로 처리 · 검사\n- `Look up balance`",
+        "width": 410.0,
+        "height": 600,
+        "color": 1
+      }
+    },
+    {
+      "id": "70706773-b90b-5736-8a38-78609cba1da9",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1200.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 3️⃣ 📤 답장\n- `Send result`",
+        "width": 380.0,
+        "height": 600,
+        "color": 4
+      }
+    },
+    {
+      "id": "7bb001f9-47f8-55a8-9a9d-105ad409fe46",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        770
+      ],
+      "parameters": {
+        "content": "## ▶ 실행해 보기\n이 워크플로우는 **게시(Published)** 되어 있어서 아래 주소로 바로 부를 수 있어요. 터미널은 `Last3Mon/68` 폴더에서.\n\n**① 요청 하나 보내기 (JSON 그대로)**\n```\nuv run tools/flow.py call a3-hr-balance '{\"user\": \"박서연\"}'\n```\n**② 결과 보기**: 화면 위 **Executions** 탭 → 맨 위 실행 → 노드를 눌러 들어온 값 · 나간 값 확인",
+        "width": 1000,
+        "height": 330,
+        "color": 7
+      }
+    },
+    {
+      "id": "b37be448-840b-53af-8c7c-277cbb19b623",
+      "name": "Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        980,
+        770
+      ],
+      "parameters": {
+        "content": "## 💡 이 Agent는 혼자 쓰기보다\n라우터 **`a3-hr`** 가 HTTP로 부릅니다.\n직원 요청 한 문장은 라우터에 보내세요.",
+        "width": 640,
+        "height": 170,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Balance webhook": {
+      "main": [
+        [
+          {
+            "node": "Has user?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has user?": {
+      "main": [
+        [
+          {
+            "node": "Look up balance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Look up balance": {
+      "main": [
+        [
+          {
+            "node": "Send result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,144 @@
+{
+  "webhook": "my-search",
+  "description": "Lab 03 과제 · 직원 말투 어려운 질문 (답이 있는 문서만, 차해든 2026-10-23)",
+  "before": [
+    {
+      "webhook": "my-index",
+      "request": "requests/index-section.json"
+    }
+  ],
+  "cases": [
+    {
+      "name": "챗GPT에 거래처 견적서 붙여 넣고 요약시켜도 돼?",
+      "body": {
+        "question": "챗GPT에 거래처 견적서 붙여 넣고 요약시켜도 돼?"
+      },
+      "expect": {
+        "equals": {
+          "hits.0.source": "software-usage"
+        }
+      }
+    },
+    {
+      "name": "제미나이한테 고객 명단 정리 시켜도 되나요?",
+      "body": {
+        "question": "제미나이한테 고객 명단 정리 시켜도 되나요?"
+      },
+      "expect": {
+        "equals": {
+          "hits.0.source": "software-usage"
+        }
+      }
+    },
+    {
+      "name": "비번 계속 틀려서 못 들어가요",
+      "body": {
+        "question": "비번 계속 틀려서 못 들어가요"
+      },
+      "expect": {
+        "equals": {
+          "hits.0.source": "password-policy"
+        }
+      }
+    },
+    {
+      "name": "폰 바꿨는데 인증번호 앱은 어떻게 옮겨요?",
+      "body": {
+        "question": "폰 바꿨는데 인증번호 앱은 어떻게 옮겨요?"
+      },
+      "expect": {
+        "equals": {
+          "hits.0.source": "password-policy"
+        }
+      }
+    },
+    {
+      "name": "회사 컴에 카톡 깔아도 돼요?",
+      "body": {
+        "question": "회사 컴에 카톡 깔아도 돼요?"
+      },
+      "expect": {
+        "equals": {
+          "hits.0.source": "software-usage"
+        }
+      }
+    },
+    {
+      "name": "맥북 지하철에 두고 내렸어요 ㅠㅠ",
+      "body": {
+        "question": "맥북 지하철에 두고 내렸어요 ㅠㅠ"
+      },
+      "expect": {
+        "equals": {
+          "hits.0.source": "device-issue-return"
+        }
+      }
+    },
+    {
+      "name": "스벅에서 회사 서버 들어가도 돼요?",
+      "body": {
+        "question": "스벅에서 회사 서버 들어가도 돼요?"
+      },
+      "expect": {
+        "equals": {
+          "hits.0.source": "remote-work-vpn"
+        }
+      }
+    },
+    {
+      "name": "집에서 애들이랑 같이 쓰는 컴으로 일해도 되나요?",
+      "body": {
+        "question": "집에서 애들이랑 같이 쓰는 컴으로 일해도 되나요?"
+      },
+      "expect": {
+        "equals": {
+          "hits.0.source": "remote-work-vpn"
+        }
+      }
+    },
+    {
+      "name": "내 폰으로 회사 메일 보려면 뭐 깔아야 돼?",
+      "body": {
+        "question": "내 폰으로 회사 메일 보려면 뭐 깔아야 돼?"
+      },
+      "expect": {
+        "equals": {
+          "hits.0.source": "device-issue-return"
+        }
+      }
+    },
+    {
+      "name": "퇴사 전에 장비 언제까지 내야 돼요?",
+      "body": {
+        "question": "퇴사 전에 장비 언제까지 내야 돼요?"
+      },
+      "expect": {
+        "equals": {
+          "hits.0.source": "device-issue-return"
+        }
+      }
+    },
+    {
+      "name": "손님 개인정보 든 엑셀 파일 협력사에 보내야 하는데요",
+      "body": {
+        "question": "손님 개인정보 든 엑셀 파일 협력사에 보내야 하는데요"
+      },
+      "expect": {
+        "equals": {
+          "hits.0.source": "email-and-documents"
+        }
+      }
+    },
+    {
+      "name": "줌 회의 카메라 쓰고 싶은데 언제 말해야 돼요?",
+      "body": {
+        "question": "줌 회의 카메라 쓰고 싶은데 언제 말해야 돼요?"
+      },
+      "expect": {
+        "equals": {
+          "hits.0.source": "meeting-room"
+        }
+      }
+    }
+  ]
+}

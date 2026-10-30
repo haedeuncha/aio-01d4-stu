@@ -1,0 +1,185 @@
+{
+  "webhook": "a3-trip-schedule",
+  "cases": [
+    {
+      "name": "일정 · 등록",
+      "body": {
+        "title": "테스트 일정",
+        "date": "2026-11-20",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "route": "등록 완료"
+        },
+        "contains": {
+          "event.id": [
+            "E-20261120"
+          ]
+        }
+      },
+      "webhook": "a3-trip-schedule"
+    },
+    {
+      "name": "일정 · 지난 날짜 거절",
+      "body": {
+        "title": "지난 일",
+        "date": "2026-10-01",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "route": "거절"
+        }
+      },
+      "webhook": "a3-trip-schedule"
+    },
+    {
+      "name": "일정 · 날짜 모양 틀림",
+      "body": {
+        "title": "모양",
+        "date": "11월 20일",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "route": "입력 필요"
+        }
+      },
+      "webhook": "a3-trip-schedule"
+    },
+    {
+      "name": "일정 · 입력 없음 400",
+      "body": {
+        "date": "2026-11-20",
+        "user": "김민지"
+      },
+      "expect": {
+        "status": 400
+      },
+      "webhook": "a3-trip-schedule"
+    },
+    {
+      "name": "일정 · 공용 일정과 겹침 알림",
+      "body": {
+        "title": "신제품 게시",
+        "date": "2026-11-02",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "route": "등록 완료"
+        },
+        "contains": {
+          "answer": [
+            "신제품 발표"
+          ]
+        }
+      },
+      "webhook": "a3-trip-schedule"
+    },
+    {
+      "name": "일정 · 남의 개인 일정 숨김",
+      "body": {
+        "title": "점검",
+        "date": "2026-10-27",
+        "user": "김민지"
+      },
+      "expect": {
+        "not_contains": {
+          "answer": [
+            "고객사 미팅"
+          ],
+          "conflicts": [
+            "이준호"
+          ]
+        }
+      },
+      "webhook": "a3-trip-schedule"
+    },
+    {
+      "name": "출장 규정 · 부산 숙박",
+      "body": {
+        "question": "부산 출장 숙소는 하루 얼마까지 돼?",
+        "user": "이준호",
+        "city": "부산"
+      },
+      "expect": {
+        "equals": {
+          "route": "자동 답변"
+        },
+        "contains": {
+          "answer": [
+            "100,000",
+            "10만"
+          ]
+        }
+      },
+      "webhook": "a3-trip-policy"
+    },
+    {
+      "name": "출장비 · 부산 2박 3일",
+      "body": {
+        "user": "이준호",
+        "city": "부산",
+        "start": "2026-11-12",
+        "end": "2026-11-14"
+      },
+      "expect": {
+        "equals": {
+          "route": "접수 완료",
+          "amount": 290000
+        }
+      },
+      "webhook": "a3-trip-expense"
+    },
+    {
+      "name": "출장비 · 서울 1박 2일",
+      "body": {
+        "user": "김민지",
+        "city": "서울",
+        "start": "2026-11-16",
+        "end": "2026-11-17"
+      },
+      "expect": {
+        "equals": {
+          "amount": 180000
+        }
+      },
+      "webhook": "a3-trip-expense"
+    },
+    {
+      "name": "출장비 · 10박 팀장 결재",
+      "body": {
+        "user": "김민지",
+        "city": "대구",
+        "start": "2026-11-16",
+        "end": "2026-11-26"
+      },
+      "expect": {
+        "equals": {
+          "route": "담당자 연결"
+        },
+        "contains": {
+          "answer": [
+            "TR-4"
+          ]
+        }
+      },
+      "webhook": "a3-trip-expense"
+    },
+    {
+      "name": "출장비 · 날짜 없음",
+      "body": {
+        "user": "김민지",
+        "city": "대구"
+      },
+      "expect": {
+        "equals": {
+          "route": "입력 필요"
+        }
+      },
+      "webhook": "a3-trip-expense"
+    }
+  ]
+}

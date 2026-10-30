@@ -1,0 +1,140 @@
+{
+  "webhook": "rk-reply-v2",
+  "cases": [
+    {
+      "name": "v2 · 첫 줄 요약 · summary",
+      "body": {
+        "user": "박서연",
+        "results": [
+          {
+            "index": 2,
+            "type": "leave",
+            "text": "휴가",
+            "agent": "a3-hr-leave",
+            "route": "입력 필요",
+            "answer": "날짜를 알려 주세요.",
+            "detail": {}
+          },
+          {
+            "index": 1,
+            "type": "balance",
+            "text": "연차",
+            "agent": "a3-hr-balance",
+            "route": "자동 답변",
+            "answer": "남은 연차는 9일입니다.",
+            "detail": {
+              "remaining": 9
+            }
+          },
+          {
+            "index": 3,
+            "type": "other",
+            "text": "월급",
+            "agent": "담당자 연결",
+            "route": "담당자 연결",
+            "answer": "담당자에게 전달했습니다.",
+            "detail": {}
+          }
+        ]
+      },
+      "expect": {
+        "equals": {
+          "count": 3,
+          "results.0.index": 1,
+          "summary.자동 답변": 1,
+          "summary.입력 필요": 1,
+          "summary.담당자 연결": 1
+        },
+        "contains": {
+          "reply": [
+            "박서연 님 · 3건 처리: ✅ 자동 답변 1 · ❓ 입력 필요 1 · 🙋 담당자 연결 1"
+          ]
+        },
+        "not_contains": {
+          "reply": [
+            "요청하신 3가지를 정리했어요",
+            "undefined"
+          ]
+        }
+      }
+    },
+    {
+      "name": "v2 · 줄마다 아이콘은 v1과 같음",
+      "body": {
+        "user": "이준호",
+        "results": [
+          {
+            "index": 1,
+            "type": "leave",
+            "text": "휴가",
+            "agent": "a3-hr-leave",
+            "route": "입력 필요",
+            "answer": "날짜를 알려 주세요.",
+            "detail": {}
+          },
+          {
+            "index": 2,
+            "type": "other",
+            "text": "월급",
+            "agent": "담당자 연결",
+            "route": "담당자 연결",
+            "answer": "전달했습니다.",
+            "detail": {}
+          }
+        ]
+      },
+      "expect": {
+        "contains": {
+          "reply": [
+            "1. ❓ [입력 필요]"
+          ]
+        },
+        "equals": {
+          "count": 2
+        }
+      }
+    },
+    {
+      "name": "v2 · 여러 줄 답 들여쓰기 그대로",
+      "body": {
+        "user": "김민지",
+        "results": [
+          {
+            "index": 1,
+            "type": "sns",
+            "text": "SNS",
+            "agent": "a3-sns",
+            "route": "자동 답변",
+            "answer": "[instagram] 글 하나\n[x] 글 둘",
+            "detail": {}
+          }
+        ]
+      },
+      "expect": {
+        "contains": {
+          "reply": [
+            "\n   [x] 글 둘"
+          ]
+        }
+      }
+    },
+    {
+      "name": "v2 · 결과 없음",
+      "body": {
+        "user": "김민지",
+        "results": []
+      },
+      "expect": {
+        "equals": {
+          "count": 0,
+          "summary": {}
+        },
+        "contains": {
+          "reply": [
+            "처리한 일이 없어요"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,236 @@
+{
+  "name": "auto3 · 마케팅 일정 Agent",
+  "nodes": [
+    {
+      "name": "Schedule webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        65,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "a3-content-schedule",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Has inputs?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        495,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ ['title', 'date', 'user'].every(k => typeof $json.body?.[k] === 'string' && $json.body[k].trim() !== '') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Reject missing",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        495,
+        520
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"error\": \"title, date, user are required\", \"hint\": \"예: {\\\"title\\\": \\\"부산 출장\\\", \\\"date\\\": \\\"2026-11-12\\\", \\\"user\\\": \\\"이준호\\\"}\"}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "name": "Check and save",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        925,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const body = $('Schedule webhook').first().json.body;\nconst today = $now.setZone('Asia/Seoul').toFormat('yyyy-MM-dd');\nconst isDate = s => typeof s === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(s) && !isNaN(Date.parse(s + 'T00:00:00Z')) && new Date(s + 'T00:00:00Z').toISOString().slice(0, 10) === s;\nconst dayKo = s => '일월화수목금토'[new Date(s + 'T00:00:00Z').getUTCDay()];\nconst addDays = (s, n) => new Date(Date.parse(s + 'T00:00:00Z') + n * 86400000).toISOString().slice(0, 10);\nconst daysBetween = (a, b) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / 86400000);\n// LLM이 날짜를 지어내지 않았는지: 요청 문장에 날짜를 말하는 표현이 있어야 날짜를 믿는다\nconst mentionsDate = text => /\\d{1,2}\\s*월|\\d{1,2}\\s*일|\\d{4}-\\d{1,2}-\\d{1,2}|\\d{1,2}\\/\\d{1,2}|오늘|내일|모레|글피|요일|이번\\s*주|다음\\s*주|주말|월말|월초/.test(String(text ?? ''));\nconst range = (a, b) => (!b || a === b) ? `${a}(${dayKo(a)})` : `${a}(${dayKo(a)}) ~ ${b}(${dayKo(b)})`;\nconst won = n => Math.round(n).toString().replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',') + '원';\nconst hash = s => { let h = 5381; for (const c of s) h = ((h * 33) ^ c.codePointAt(0)) >>> 0; return h.toString(36).toUpperCase().slice(-4).padStart(4, '0'); };\nconst title = String(body.title).trim();\nconst user = String(body.user).trim();\nconst date = String(body.date).trim();\nconst endDate = String(body.end_date ?? '').trim() || date;\nconst reply = (route, answer, extra = {}) => [{ json: { route, answer, ...extra } }];\nif (!isDate(date) || !isDate(endDate)) return reply('입력 필요', `날짜는 2026-11-06처럼 YYYY-MM-DD 모양으로 보내 주세요. (받은 값: ${date}${endDate !== date ? ' ~ ' + endDate : ''})`);\nif (endDate < date) return reply('입력 필요', `끝 날짜(${endDate})가 시작 날짜(${date})보다 빠릅니다.`);\nif (date < today) return reply('거절', `${range(date)}은 이미 지난 날짜라 등록하지 않았습니다. 오늘은 ${range(today)}입니다.`);\n\n// 연습용 회사 달력 (shared = 모두가 볼 수 있는 일정)\nconst BASE = [\n  { id: 'E-BASE-1', title: '주간 회의', date: '2026-10-23', end_date: '2026-10-23', owner: '박서연', shared: false },\n  { id: 'E-BASE-2', title: '고객사 미팅', date: '2026-10-27', end_date: '2026-10-27', owner: '이준호', shared: false },\n  { id: 'E-BASE-3', title: '신제품 발표', date: '2026-11-02', end_date: '2026-11-02', owner: '마케팅팀', shared: true },\n  { id: 'E-BASE-4', title: '전사 워크숍', date: '2026-11-13', end_date: '2026-11-13', owner: '전사', shared: true },\n];\nlet store = { events: [] };\ntry { store = $getWorkflowStaticData('global'); if (!Array.isArray(store.events)) store.events = []; } catch (error) { store = { events: [] }; }\nconst all = [...BASE, ...store.events];\nconst existing = all.find(e => e.title === title && e.date === date && e.end_date === endDate && e.owner === user);\nconst event = existing || { id: `E-${date.replace(/-/g, '')}-${hash(user + '|' + title + '|' + endDate)}`, title, date, end_date: endDate, owner: user, shared: false };\nif (!existing) {\n  store.events.push(event);\n  if (store.events.length > 200) store.events.splice(0, store.events.length - 200);\n}\n// 남의 개인 일정은 보여 주지 않음: 내 일정 + 모두 보는 일정만\nconst conflicts = all.filter(e => e.id !== event.id && (e.owner === user || e.shared) && e.date <= endDate && e.end_date >= date)\n  .map(e => ({ title: e.title, date: e.date, owner: e.owner }));\nconst warn = conflicts.length ? ` ⚠ 같은 기간 일정: ${conflicts.map(c => `${c.title}(${c.date}, ${c.owner})`).join(', ')}.` : '';\nreturn reply('등록 완료', `${range(date, endDate)} '${title}' 일정을 ${existing ? '이미 등록해 두었습니다' : '등록했습니다'} (일정 번호 ${event.id}).${warn}`,\n  { event: { id: event.id, title, date, end_date: endDate, owner: user }, conflicts });"
+      }
+    },
+    {
+      "name": "Send result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1355,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "78ea44cc-7ac7-5190-ab16-81167ea11c50",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -110
+      ],
+      "parameters": {
+        "content": "# ✨ 📅 auto3 · 마케팅 일정 Agent ✨\n`POST /webhook/a3-content-schedule` · 입력 `title`, `date`, `user` (+ `end_date`)\nLLM 없이 Code만: 날짜 검사 · 지난 날짜 거절 · 겹치는 일정 알림",
+        "width": 1640,
+        "height": 190,
+        "color": 6
+      }
+    },
+    {
+      "id": "045fffd4-9141-587c-86cf-0d72e4b34f00",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        110
+      ],
+      "parameters": {
+        "content": "## 1️⃣ 📥 받기 · 입력 확인\n- `Schedule webhook`\n- `Has inputs?`\n- `Reject missing`",
+        "width": 810.0,
+        "height": 600,
+        "color": 5
+      }
+    },
+    {
+      "id": "c8b3e4d7-541d-5e9c-9b85-ae6545c9e9c4",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        770.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 2️⃣ 🧮 Code로 처리 · 검사\n- `Check and save`",
+        "width": 410.0,
+        "height": 600,
+        "color": 1
+      }
+    },
+    {
+      "id": "7d999303-e6ba-59c9-a393-9957e05a0ac6",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1200.0,
+        110
+      ],
+      "parameters": {
+        "content": "## 3️⃣ 📤 답장\n- `Send result`",
+        "width": 380.0,
+        "height": 600,
+        "color": 4
+      }
+    },
+    {
+      "id": "ce0d1ee7-3d41-5686-8936-123e69d22fb5",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        770
+      ],
+      "parameters": {
+        "content": "## ▶ 실행해 보기\n이 워크플로우는 **게시(Published)** 되어 있어서 아래 주소로 바로 부를 수 있어요. 터미널은 `Last3Mon/68` 폴더에서.\n\n**① 요청 하나 보내기 (JSON 그대로)**\n```\nuv run tools/flow.py call a3-content-schedule '{\"title\": \"루미 게시\", \"date\": \"2026-11-02\", \"user\": \"김민지\"}'\n```\n**② 결과 보기**: 화면 위 **Executions** 탭 → 맨 위 실행 → 노드를 눌러 들어온 값 · 나간 값 확인",
+        "width": 1000,
+        "height": 330,
+        "color": 7
+      }
+    },
+    {
+      "id": "f6a3256a-27f6-57e0-8275-93c1d93bf7b1",
+      "name": "Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        980,
+        770
+      ],
+      "parameters": {
+        "content": "## 💡 이 Agent는 혼자 쓰기보다\n라우터 **`a3-content`** 가 HTTP로 부릅니다.\n직원 요청 한 문장은 라우터에 보내세요.",
+        "width": 640,
+        "height": 170,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Schedule webhook": {
+      "main": [
+        [
+          {
+            "node": "Has inputs?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has inputs?": {
+      "main": [
+        [
+          {
+            "node": "Check and save",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check and save": {
+      "main": [
+        [
+          {
+            "node": "Send result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,207 @@
+{
+  "webhook": "a3-content-schedule",
+  "cases": [
+    {
+      "name": "일정 · 등록",
+      "body": {
+        "title": "테스트 일정",
+        "date": "2026-11-20",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "route": "등록 완료"
+        },
+        "contains": {
+          "event.id": [
+            "E-20261120"
+          ]
+        }
+      },
+      "webhook": "a3-content-schedule"
+    },
+    {
+      "name": "일정 · 지난 날짜 거절",
+      "body": {
+        "title": "지난 일",
+        "date": "2026-10-01",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "route": "거절"
+        }
+      },
+      "webhook": "a3-content-schedule"
+    },
+    {
+      "name": "일정 · 날짜 모양 틀림",
+      "body": {
+        "title": "모양",
+        "date": "11월 20일",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "route": "입력 필요"
+        }
+      },
+      "webhook": "a3-content-schedule"
+    },
+    {
+      "name": "일정 · 입력 없음 400",
+      "body": {
+        "date": "2026-11-20",
+        "user": "김민지"
+      },
+      "expect": {
+        "status": 400
+      },
+      "webhook": "a3-content-schedule"
+    },
+    {
+      "name": "일정 · 공용 일정과 겹침 알림",
+      "body": {
+        "title": "신제품 게시",
+        "date": "2026-11-02",
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "route": "등록 완료"
+        },
+        "contains": {
+          "answer": [
+            "신제품 발표"
+          ]
+        }
+      },
+      "webhook": "a3-content-schedule"
+    },
+    {
+      "name": "일정 · 남의 개인 일정 숨김",
+      "body": {
+        "title": "점검",
+        "date": "2026-10-27",
+        "user": "김민지"
+      },
+      "expect": {
+        "not_contains": {
+          "answer": [
+            "고객사 미팅"
+          ],
+          "conflicts": [
+            "이준호"
+          ]
+        }
+      },
+      "webhook": "a3-content-schedule"
+    },
+    {
+      "name": "소개글 · 이름과 가격",
+      "body": {
+        "product": {
+          "name": "루미 무선 이어폰",
+          "price": 89000,
+          "features": [
+            "노이즈 캔슬링",
+            "30시간 재생",
+            "IPX5 방수"
+          ]
+        },
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "route": "자동 답변"
+        },
+        "contains": {
+          "text": [
+            "루미 무선 이어폰"
+          ]
+        },
+        "not_contains": {
+          "text": [
+            "99,000",
+            "79,000",
+            "1위"
+          ]
+        }
+      },
+      "webhook": "a3-copy"
+    },
+    {
+      "name": "소개글 · 가격 지어내지 않음",
+      "body": {
+        "product": {
+          "name": "루미 무선 이어폰",
+          "features": [
+            "노이즈 캔슬링",
+            "IPX5 방수"
+          ]
+        },
+        "user": "김민지"
+      },
+      "expect": {
+        "equals": {
+          "route": "자동 답변"
+        },
+        "not_contains": {
+          "text": [
+            "000원",
+            "할인",
+            "%"
+          ]
+        }
+      },
+      "webhook": "a3-copy"
+    },
+    {
+      "name": "소개글 · 제품 없음 400",
+      "body": {
+        "user": "김민지"
+      },
+      "expect": {
+        "status": 400
+      },
+      "webhook": "a3-copy"
+    },
+    {
+      "name": "SNS · 인스타·X",
+      "body": {
+        "text": "루미 무선 이어폰은 노이즈 캔슬링으로 주변 소음을 줄여 음악에 집중하게 해 줍니다. 한 번 충전으로 30시간 재생되어 출퇴근과 여행에도 넉넉하고, IPX5 방수라 운동할 때도 걱정 없어요. 가격은 89,000원입니다. 매일 함께할 이어폰으로 루미를 만나 보세요.",
+        "channels": [
+          "instagram",
+          "x"
+        ]
+      },
+      "expect": {
+        "equals": {
+          "route": "자동 답변",
+          "posts.0.channel": "instagram",
+          "posts.1.channel": "x",
+          "posts.1.limit": 140
+        },
+        "not_contains": {
+          "answer": [
+            "99,000",
+            "79,000"
+          ]
+        }
+      },
+      "webhook": "a3-sns"
+    },
+    {
+      "name": "SNS · text 없음 400",
+      "body": {
+        "channels": [
+          "x"
+        ]
+      },
+      "expect": {
+        "status": 400
+      },
+      "webhook": "a3-sns"
+    }
+  ]
+}

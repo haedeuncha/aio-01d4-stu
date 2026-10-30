@@ -1,0 +1,73 @@
+{
+  "id": "modBuildReply02",
+  "name": "70-11 · 🧩 모듈 · 답장 만들기 v2 (modBuildReply02)",
+  "nodes": [
+    {
+      "name": "When called by another workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "inputSource": "workflowInputs",
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "user",
+              "type": "string"
+            },
+            {
+              "name": "results",
+              "type": "array"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Build reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// 모듈 입력: user, results\nconst results = [...(Array.isArray($json.results) ? $json.results : [])].sort((a, b) => a.index - b.index);\nconst user = String($json.user ?? '').trim();\nconst ICON = { '자동 답변': '✅', '접수 완료': '📝', '등록 완료': '📅', '거절': '⛔', '입력 필요': '❓', '담당자 연결': '🙋' };\nconst oneLine = value => String(value ?? '').replace(/\\s+/g, ' ').trim();\n// 여러 줄 답(SNS 채널별 글)은 줄을 살려 들여 쓴다\nconst block = value => String(value ?? '').split('\\n').map(oneLine).filter(Boolean).join('\\n   ');\nconst lines = results.map(r => `${r.index}. ${ICON[r.route] ?? '•'} [${r.route}] ${block(r.answer)}`);\nconst ask = results.filter(r => r.route === '입력 필요').map(r => r.index);\nconst handed = results.filter(r => r.route === '담당자 연결').map(r => r.index);\nconst tail = [];\nif (ask.length) tail.push(`❓ ${ask.join(', ')}번은 필요한 정보를 알려 주시면 바로 처리할게요.`);\nif (handed.length) tail.push(`🙋 ${handed.join(', ')}번은 담당자가 이어서 연락드립니다.`);\n// v2: 첫 줄을 처리 요약으로 바꾸고(깨지는 변경), 결과에 summary(처리 상태별 개수)를 더한다\nconst ORDER = ['자동 답변', '접수 완료', '등록 완료', '거절', '입력 필요', '담당자 연결'];\nconst summary = Object.fromEntries(ORDER.map(route => [route, results.filter(r => r.route === route).length]).filter(([, n]) => n > 0));\nconst head = results.length\n  ? `${user} 님 · ${results.length}건 처리: ` + Object.entries(summary).map(([route, n]) => `${ICON[route] ?? '•'} ${route} ${n}`).join(' · ')\n  : `${user} 님 · 처리한 일이 없어요.`;\nconst reply = [head, ...lines, ...tail].join('\\n');\nreturn [{ json: { count: results.length, summary, results, reply } }];"
+      }
+    },
+    {
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        60
+      ],
+      "parameters": {
+        "content": "## 🧩 모듈 · 답장 만들기 v2 `modBuildReply02`\n입력 `user`, `results[]` (v1과 같음) → 결과 `{count, summary, results, reply}`\n🔁 v1과 다른 점: `reply` 첫 줄이 처리 요약(`박서연 님 · 3건 처리: ✅ 자동 답변 1 · …`), `summary` 칸 추가\n⚠️ 첫 줄이 바뀌어 v1 결과를 기대하는 곳이 깨지므로 **새 id**. v1(`modBuildReply01`)은 그대로 둔다",
+        "width": 620,
+        "height": 220,
+        "color": 6
+      }
+    }
+  ],
+  "connections": {
+    "When called by another workflow": {
+      "main": [
+        [
+          {
+            "node": "Build reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
