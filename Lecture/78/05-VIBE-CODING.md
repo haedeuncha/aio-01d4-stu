@@ -56,7 +56,7 @@ flowchart LR
 | 고침 목록 | Lab 01 과제 2 | `--fix` (R9) |
 | 품질 기록 | Lab 03 과제 2 | `--log` (R10) |
 
-- 풀이 거리: 강사 본은 직원 HR-1 · 접수 건 TK-1 · FAQ B-3에서 `rows` · `codes` · `valid`가 `my-check`와 **하나도 다르지 않았습니다.** Python `re`의 `\w`는 한글도 맞아 메일 판정이 JavaScript와 다를 수 있었고(`re.ASCII`), 날짜를 꼴만 보면 2월 30일이 통과합니다. "같은 규칙을 두 곳에 쓰면 반드시 어긋난다 — 그래서 n8n 안에서는 검사를 다시 부르고, 밖에서는 테스트로 같은 판정을 확인한다."
+- 풀이 거리: 강사 본은 직원 HR-1 · 접수 건 TK-1 · FAQ B-3에서 `rows` · `codes` · `valid`가 `my-check`와 **하나도 다르지 않았습니다.** Python `re`의 `\w`는 한글도 맞아 메일 판정이 JavaScript와 다를 수 있었고(`re.ASCII`), 날짜를 형식만 보면 2월 30일이 통과합니다. "같은 규칙을 두 곳에 쓰면 반드시 어긋난다 — 그래서 n8n 안에서는 검사를 다시 부르고, 밖에서는 테스트로 같은 판정을 확인한다."
 - 같은 FAQ B-1을 `tcheck --schema faq --content answer`로 보면 Lab 01 예제 2의 8줄과 같은 줄이 나쁩니다 — 코드 이름만 다릅니다 (`title_missing` ↔ `missing:title`).
 
 ## 4. 강사 바이브 코딩 (시간이 남으면 · 수업 뒤, 15분)
